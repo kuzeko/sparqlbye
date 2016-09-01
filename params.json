@@ -1,0 +1,6 @@
+{
+  "name": "SPARQLByE",
+  "tagline": "SPARQLByE: reverse engineering SPARQL queries.",
+  "body": "### People\r\n* [Gonzalo I. Diaz](https://www.cs.ox.ac.uk/people/gonzalo.diaz/)\r\n* [Marcelo Arenas](http://marenas.sitios.ing.uc.cl/)\r\n* [Michael Benedikt](https://www.cs.ox.ac.uk/people/michael.benedikt/)\r\n\r\n### References\r\n1. Diaz, G. I., Arenas, M., Benedikt, M., \"SPARQLByE: Querying RDF data by example\", VDLB 2016.\r\n2. Arenas, M., Diaz, G. I., Kostylev, E., \"Reverse Engineering SPARQL Queries\", WWW 2016.\r\n",
+  "note": "Don't delete this file! It's used internally to help with page regeneration."
+}
