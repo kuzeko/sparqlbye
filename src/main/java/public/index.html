@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="resparql">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SPARQLByE</title>
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
+  <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+
+  <div id="main-ng-container" class="container-fluid" ng-controller="QueryTextController as queryText">
+
+    <nav class="navbar navbar-default navbar-static-top">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">SPARQLByE</a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="row">
+      <div class="col-md-3">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h2 class="panel-title">Entity search</h2>
+          </div>
+          <div class="panel-body">
+            <input type="text" id="keywordInputText" class="form-control resparql-code-textarea" ng-model="queryText.keywordInputText"></input>
+            <a href="#" class="btn btn-primary" ng-click="queryText.searchEntity()"><span class="glyphicon glyphicon-send" aria-hidden="true"></span> Search</a>
+          </div>
+
+          <ul class="list-group">
+            <li class="list-group-item" ng-repeat="(key, value) in queryText.entityPairs">
+              <div class="btn-group">
+                <button type="button" class="btn btn-success btn-xs" ng-click="queryText.addPositiveEntity()"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
+                <button type="button" class="btn btn-danger btn-xs" ng-click="queryText.addNegativeEntity()"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span></button>
+              </div> <small>{{value.label}}</small> <small>(type: <code>{{value.type.replace('http://dbpedia.org/ontology/','')}}</code>)</small> <small>({{value.uri}})</small>
+            </li>
+            <li class="list-group-item"><a href="#">more</a></li>
+          </ul>
+        </div>
+
+        <div id="logpanel-div" class="panel panel-default">
+          <div class="panel-heading">
+            <h2 class="panel-title">Log</h2>
+          </div>
+          <div class="panel-body">
+            <pre id="log"></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h2 class="panel-title">Positive and negative examples</h2>
+          </div>
+          <div class="panel-body">
+            <p>
+              Type your positive and negative examples into the box below. Precede an example with <code>+</code> to indicate a positive example, and with <code>-</code> to indicate a negative example. Examples that are not labelled will be assumed positive. To include non-ASCII characters, surround with square brackets, e.g. <code>-[B&iacute;o-B&iacute;o]</code>. To use a full IRI as an example, use angle brackets: <code>+&lt;http://dbpedia.org/resource/Santiago&gt;</code>.
+            </p>
+            <textarea id="pnExamplesQuickTextArea" class="form-control resparql-code-textarea" rows="4" ng-model="queryText.pnExamplesQuickText"></textarea>
+            <div class="text-center">
+              <a href="#" id="reveng-a" class="btn btn-primary" ng-click="queryText.executeRevEngQuick()"><span class="glyphicon glyphicon-send" aria-hidden="true"></span> Run</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h2 class="panel-title">Forbidden URIs</h2>
+          </div>
+          <div class="panel-body">
+            <p>
+              Add URIs in this panel to forbid them. Enclose each URI with angle brackets (e.g. <code>&lt;http://xmlns.com/foaf/0.1/Person&gt;</code>) and separate URIs with spaces.
+            </p>
+            <textarea name="name" rows="3" class="form-control resparql-code-textarea" ng-model="queryText.badUrisText"></textarea>
+          </div>
+          <ul class="list-group">
+            <li class="list-group-item" ng-repeat="(key, value) in queryText.urisUsed">
+              <a href="#" id="reveng-a" class="btn btn-primary btn-xs btn-danger" ng-click="queryText.addForbiddenURI(value)"><span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span></a> &lt;{{value}}&gt;
+            </li>
+          </ul>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h2 class="panel-title">Reverse engineered SPARQL query</h2>
+          </div>
+          <div class="panel-body">
+            <!-- <pre id="learnedQueryPre">{{queryText.learnedQuery}}</pre> -->
+            <textarea name="name" rows="8" class="form-control resparql-code-textarea" ng-model="queryText.learnedQuery"></textarea>
+            <!-- <div class="text-center">
+              <a href="#" class="btn btn-primary" ng-click="queryText.executeQuery()"><span class="glyphicon glyphicon-send" aria-hidden="true"></span> Execute Query</a>
+            </div> -->
+          </div>
+        </div>
+
+      </div>
+
+      <div class="col-md-3">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h2 class="panel-title">Results</h2>
+          </div>
+          <div class="panel-body">
+            This panel shows up to 10 mappings that result from executing the reverse engineered query on the current RDF dataset. You can use the buttons to add these mappings to your labelled examples.
+          </div>
+          <ul class="list-group">
+            <li class="list-group-item" ng-repeat="(key, value) in queryText.revengQueryBindings">
+              <div class="container-fluid">
+                <div class="row">
+                  <div class="col-xs-3 nopadding">
+                    <div class="btn-group">
+                      <button type="button" class="btn btn-success btn-xs" ng-click="queryText.appendPSol(value)"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
+                      <button type="button" class="btn btn-danger btn-xs" ng-click="queryText.appendNSol(value)"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span></button>
+                    </div>
+                  </div>
+                  <div class="col-xs-9 nopadding">
+                    <small>&lt;{{value.x.value.replace('http://dbpedia.org/resource/','dbpedia:')}}&gt;</small>
+                    <small ng-if="queryText.binMappings">&lt;{{value.y.value.replace('http://dbpedia.org/resource/','dbpedia:')}}&gt;</small>
+                  </div>
+                </div>
+              </div>
+              <!-- <div class="btn-group">
+                <button type="button" class="btn btn-success btn-xs" ng-click="queryText.addPositiveEntity()"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
+                <button type="button" class="btn btn-danger btn-xs" ng-click="queryText.addNegativeEntity()"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span></button>
+              </div> <small>&lt;{{value.x.value.replace('http://dbpedia.org/resource/','dbpedia:')}}&gt;</small>
+              <small ng-if="queryText.binMappings">&lt;{{value.y.value.replace('http://dbpedia.org/resource/','dbpedia:')}}&gt;</small> -->
+            </li>
+          </ul>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h2 class="panel-title">Extra results</h2>
+          </div>
+          <div class="panel-body">
+            This panel shows up to 10 mappings that result from executing a relaxed query on the current RDF dataset. You can use the buttons to add these mappings to your labelled examples.
+          </div>
+          <ul class="list-group">
+            <li class="list-group-item" ng-repeat="(key, value) in queryText.revengExtraBindings">
+              <div class="container-fluid">
+                <div class="row">
+                  <div class="col-xs-3 nopadding">
+                    <div class="btn-group">
+                      <button type="button" class="btn btn-success btn-xs" ng-click="queryText.appendPSol(value)"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
+                      <button type="button" class="btn btn-danger btn-xs" ng-click="queryText.appendNSol(value)"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span></button>
+                    </div>
+                  </div>
+                  <div class="col-xs-9 nopadding">
+                    <span ng-if="!queryText.binMappings">{{value.label.value}}</span> <small>&lt;{{value.x.value.replace('http://dbpedia.org/resource/','dbpedia:')}}&gt;</small> <br />
+                    <small ng-if="queryText.binMappings">&lt;{{value.y.value.replace('http://dbpedia.org/resource/','dbpedia:')}}&gt;</small>
+                    <button type="button" class="btn btn-info btn-xs" ng-click="queryText.addTypeRestr(value.minType.value)" ng-if="!queryText.binMappings"><span class="glyphicon glyphicon-flag" aria-hidden="true"></span></button> <small ng-if="!queryText.binMappings">(type: <code><a href="#">{{value.minType.value.replace('http://dbpedia.org/resource/','dbpedia:')}}</a></code>)</small>
+                  </div>
+                </div>
+              </div>
+              <!-- <div class="btn-group">
+                <button type="button" class="btn btn-success btn-xs" ng-click="queryText.addPositiveEntity()"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
+                <button type="button" class="btn btn-danger btn-xs" ng-click="queryText.addNegativeEntity()"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span></button>
+              </div> <span ng-if="!queryText.binMappings">{{value.label.value}}</span> <small>&lt;{{value.x.value.replace('http://dbpedia.org/resource/','dbpedia:')}}&gt;</small> <br />
+              <small ng-if="queryText.binMappings">&lt;{{value.y.value.replace('http://dbpedia.org/resource/','dbpedia:')}}&gt;</small>
+              <button type="button" class="btn btn-info btn-xs" ng-click="queryText.addTypeRestr(value.minType.value)" ng-if="!queryText.binMappings"><span class="glyphicon glyphicon-flag" aria-hidden="true"></span></button> <small ng-if="!queryText.binMappings">(type: <code><a href="#">{{value.minType.value.replace('http://dbpedia.org/resource/','dbpedia:')}}</a></code>)</small> -->
+            </li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular.min.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>
