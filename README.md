@@ -1,6 +1,6 @@
 # sparqlbye
 
-SPARQLByE (SPARQL By Example) reverse engineering SPARQL queries system and user interface.
+SPARQLByE (SPARQL By Example) reverse engineering SPARQL queries system and user interface (see the [project website](https://gdiazc.github.io/sparqlbye/))
 
 ## Installation
 
