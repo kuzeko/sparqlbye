@@ -5,6 +5,6 @@ SPARQLByE (SPARQL By Example) reverse engineering SPARQL queries system and user
 ## Installation
 
     mvn package
-    java -jar sparqlbye-{version}.jar
+    java -jar target/sparqlbye-{version}.jar
 
-Then point your browser to `localhost:5555/`. Note that SPARQLByE depends on an external SPARQL endpoint and expects it to be available in port `8890`.
+Then point your browser to `http://localhost:5555/`. Note that SPARQLByE depends on an external SPARQL endpoint and expects it to be available in `http://localhost:8890/`.
