@@ -34,8 +34,9 @@
           <ul class="list-group">
             <li class="list-group-item" ng-repeat="(key, value) in queryText.entityPairs">
               <div class="btn-group">
-                <button type="button" class="btn btn-success btn-xs" ng-click="queryText.addPositiveEntity()"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
-                <button type="button" class="btn btn-danger btn-xs" ng-click="queryText.addNegativeEntity()"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span></button>
+                <!-- <button type="button" class="btn btn-success btn-xs" ng-click="queryText.addPositiveEntity()"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
+                <button type="button" class="btn btn-danger btn-xs" ng-click="queryText.addNegativeEntity()"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span></button> -->
+                <button type="button" class="btn btn-primary btn-xs" ng-click="queryText.copyUri(value.uri)"><span class="glyphicon glyphicon-copy" aria-hidden="true"></span></button>
               </div> <small>{{value.label}}</small> <small>(type: <code>{{value.type.replace('http://dbpedia.org/ontology/','')}}</code>)</small> <small>({{value.uri}})</small>
             </li>
             <li class="list-group-item"><a href="#">more</a></li>
