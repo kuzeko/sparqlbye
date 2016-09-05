@@ -87,7 +87,8 @@ angular.module('resparql', [])
   queryText.pnExamplesText = "{}";
   // queryText.pnExamplesQuickText = "+Chile +Bolivia +Venezuela -Angola +Spain";
   // queryText.pnExamplesQuickText = "+{Chile,Bolivia} +{Chile,Peru} +{Chile,Argentina} -{Chile,Brazil}";
-  queryText.pnExamplesQuickText = "+{<http://dbpedia.org/resource/C._S._Lewis>,<http://dbpedia.org/resource/Oxford>} +{<http://dbpedia.org/resource/J._R._R._Tolkien>,<http://dbpedia.org/resource/Dorset>} +{<http://dbpedia.org/resource/J._K._Rowling>,}";
+  // queryText.pnExamplesQuickText = "+{<http://dbpedia.org/resource/C._S._Lewis>,<http://dbpedia.org/resource/Oxford>} +{<http://dbpedia.org/resource/J._R._R._Tolkien>,<http://dbpedia.org/resource/Dorset>} +{<http://dbpedia.org/resource/J._K._Rowling>,}";
+  queryText.pnExamplesQuickText = '';
   queryText.learnedQuery = '';
   // queryText.learnedQueryResults = '';
   queryText.entityPairs = [];
@@ -348,8 +349,19 @@ angular.module('resparql', [])
 
   queryText.copyUri = function(value) {
     console.debug('copyUri', value);
-
     copyTextToClipboard(value);
+  }
+
+  queryText.fillExample1 = function(value) {
+    queryText.pnExamplesQuickText = '+Chile +Bolivia +Venezuela +Spain -Brazil -Angola';
+  }
+
+  queryText.fillExample2 = function(value) {
+    queryText.pnExamplesQuickText = '+Chile +Bolivia +Venezuela -Spain';
+  }
+
+  queryText.fillExample3 = function(value) {
+    queryText.pnExamplesQuickText = '+{<http://dbpedia.org/resource/C._S._Lewis>,<http://dbpedia.org/resource/Oxford>}\n\n+{<http://dbpedia.org/resource/J._R._R._Tolkien>,<http://dbpedia.org/resource/Dorset>}\n\n+{<http://dbpedia.org/resource/J._K._Rowling>,}';
   }
 
 });
