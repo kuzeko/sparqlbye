@@ -59,16 +59,16 @@ public class LearnerController implements Observer {
 	private static final String API_KEYWORD_SEARCH_TYPE_KEY = "type";
 
 	private static final String API_EXECUTE_QUERY_VIRTUOSO_KEY = "virtuoso_response";
-	private static final String API_ALL_LEARNEDQUERY_KEY = "learnedQuery";
-	private static final String P_BINDINGS_KEY = "pBindings";
-	private static final String N_BINDINGS_KEY = "nBindings";
-	private static final String BAD_URIS_KEY = "badUris";
-	private static final String URIS_USED_KEY = "urisUsed";
+	private static final String API_KEY_LEARNED_QUERY = "learnedQuery";
+	private static final String API_KEY_P_BINDINGS = "pBindings";
+	private static final String API_KEY_N_BINDINGS = "nBindings";
+	private static final String API_KEY_BAD_URIS = "badUris";
+	private static final String API_KEY_URIS_USED = "urisUsed";
 	// TODO: change this string to "answers"
 	//	private static final String EXAMPLES_KEY      = "pnExamples";
 	//	private static final String VIRTUOSO_KEY      = "virtuoso";
 
-	public static enum ApiErrorType { NO_SPARQL_ENDPOINT };
+	public enum ApiErrorType { NO_SPARQL_ENDPOINT }
 
 	private static final String LOCAL_SPARQL_SERVICE_ENDPOINT = "http://localhost:8890/sparql";
 
@@ -119,8 +119,8 @@ public class LearnerController implements Observer {
 	/**
 	 * Normal communications arrive as messages, which contain a single JSON object.
 	 *
-	 * @param user
-	 * @param message
+	 * @param user Session object representing the sender.
+	 * @param message String object containing the json payload.
 	 */
 	private void onMessage(Session user, String message) {
 		log.info("LearnerController.onMessage(user,"+message+")");
@@ -140,10 +140,15 @@ public class LearnerController implements Observer {
 		}
 	}
 
+    /**
+     * Execute a keyword search on the graph and return the results to the user.
+     *
+     * @param user Session object representing the sender.
+     * @param jsonMessage JSONObject containing a keyword field.
+     */
 	private void executeSearch(Session user, JSONObject jsonMessage) {
 		log.info("executeSearch()");
 
-		String command = API_ALL_SEARCH_COMMAND;
 		String keywordsString = jsonMessage.getString(API_IN_QUERY_STRING_KEY);
 		int callbackId = jsonMessage.getInt(API_ALL_CALLBACKID_KEY);
 		String queryString = UtilsLearnerController.makeKeywordSearchQuery(keywordsString);
@@ -202,36 +207,13 @@ public class LearnerController implements Observer {
 			}
 		}, executorService)
 		.exceptionally((exception) ->
-			handleExceptionAndSendResponse(exception, user, command, callbackId)
+			handleExceptionAndSendResponse(exception, user, API_ALL_SEARCH_COMMAND, callbackId)
 		);
-//		.exceptionally((exception) -> {
-//			exception = exception.getCause();
-//			log.warn("  exceptionally: " + exception);
-//
-//			if(exception instanceof ResparqlNoEndpointException) {
-//				String responseMessage = makeErrorResponseMessage(
-//					API_ALL_SEARCH_COMMAND, callbackId, ApiErrorType.NO_SPARQL_ENDPOINT);
-//				log.info("exceptionally: payload: " + responseMessage);
-//				try {
-//					user.getRemote().sendString(responseMessage);
-//				} catch (IOException e) {
-//					log.warn("exceptionally: Could not send payload. Giving up.");
-//				}
-//			} else if(exception instanceof ResparqlSendException) {
-//				log.warn("exceptionally: ResparqlSendException");
-//			} else {
-//				log.error("exceptionally: Unexpected exception. Fatal!");
-//				throw new RuntimeException(exception);
-//			}
-//
-//			return null;
-//		});
 	}
 
 	private void executeQuery(Session user, JSONObject jsonMessage) {
 		log.info("executeQuery()");
 
-		String command = API_ALL_EXECUTE_COMMAND;
 		String queryString = jsonMessage.getString(API_IN_QUERY_STRING_KEY);
 		int callbackId = jsonMessage.getInt(API_ALL_CALLBACKID_KEY);
 
@@ -267,22 +249,19 @@ public class LearnerController implements Observer {
 				user.getRemote().sendString(responseMessage);
 			} catch (IOException e) {
 				throw new ResparqlSendException(e);
-			} catch (Exception e) {
-				throw e;
 			}
 		}, executorService)
 		.exceptionally((exception) ->
-			handleExceptionAndSendResponse(exception, user, command, callbackId)
+			handleExceptionAndSendResponse(exception, user, API_ALL_EXECUTE_COMMAND, callbackId)
 		);
 	}
 
 	private void executeReveng(Session user, JSONObject jsonMessage) {
 		log.info("executeRevEng() " + jsonMessage.toString());
 
-		String command = API_ALL_COMMAND_VALUE_REVENG;
-		JSONObject jsonPBindings = jsonMessage.getJSONObject(P_BINDINGS_KEY);
-		JSONObject jsonNBindings = jsonMessage.getJSONObject(N_BINDINGS_KEY);
-		JSONArray jsonBadUris = jsonMessage.getJSONArray(BAD_URIS_KEY);
+		JSONObject jsonPBindings = jsonMessage.getJSONObject(API_KEY_P_BINDINGS);
+		JSONObject jsonNBindings = jsonMessage.getJSONObject(API_KEY_N_BINDINGS);
+		JSONArray jsonBadUris = jsonMessage.getJSONArray(API_KEY_BAD_URIS);
 		int callbackId = jsonMessage.getInt(API_ALL_CALLBACKID_KEY);
 
 		CompletableFuture.supplyAsync(() -> {
@@ -322,7 +301,7 @@ public class LearnerController implements Observer {
 			try {
 				JSONObject resultObject = new JSONObject();
 				resultObject.put(API_ALL_COMMAND_KEY, API_ALL_COMMAND_VALUE_REVENG);
-				resultObject.put(API_ALL_LEARNEDQUERY_KEY, learnedQuery.toString());
+				resultObject.put(API_KEY_LEARNED_QUERY, learnedQuery.toString());
 				resultObject.put(API_ALL_CALLBACKID_KEY, callbackId);
 
 				// prepare json array of uris used:
@@ -333,7 +312,7 @@ public class LearnerController implements Observer {
 					jsonUris.put(uri);
 				}
 
-				resultObject.put(URIS_USED_KEY, jsonUris);
+				resultObject.put(API_KEY_URIS_USED, jsonUris);
 
 				// send a parseable representation of the query:
 				JSONArray jsonTriples = new JSONArray();
@@ -370,7 +349,7 @@ public class LearnerController implements Observer {
 		resultObject.put(API_ALL_MESSAGE_KEY, response.getMessage());
 		resultObject.put(API_ALL_COMMAND_KEY, API_ALL_COMMAND_VALUE_REVENG);
 		resultObject.put(API_ALL_CALLBACKID_KEY, callbackId);
-		resultObject.put(API_ALL_LEARNEDQUERY_KEY, "");
+		resultObject.put(API_KEY_LEARNED_QUERY, "");
 
 		log.info("sendRevengError: " + resultObject);
 

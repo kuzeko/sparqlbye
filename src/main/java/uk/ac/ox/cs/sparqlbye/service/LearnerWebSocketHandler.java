@@ -22,7 +22,7 @@ import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 public class LearnerWebSocketHandler extends Observable {
 //	private static final Logger log = Logger.getLogger(LearnerWebSocketHandler.class.getName());
 
-	public static enum ChangeType { CONNECT, CLOSE, MESSAGE };
+	public enum ChangeType { CONNECT, CLOSE, MESSAGE }
 
 	public LearnerWebSocketHandler() {
 		this.addObserver(LearnerController.getInstance());
@@ -78,10 +78,10 @@ public class LearnerWebSocketHandler extends Observable {
 		public Optional<Integer> getStatusCode() {
 			return type.equals(ChangeType.CLOSE) ? Optional.of(statusCode) : Optional.empty();
 		}
-		public Optional<String> getReason()      {
+		public Optional<String> getReason() {
 			return type.equals(ChangeType.CLOSE) ? Optional.of(reason) : Optional.empty();
 		}
-		public Optional<String> getMessage()     {
+		public Optional<String> getMessage() {
 			return type.equals(ChangeType.MESSAGE) ? Optional.of(message) : Optional.empty();
 		}
 

@@ -214,9 +214,7 @@ public abstract class UtilsLearner {
 		private final Optional<AOTree> optLearnedTree;
 		private final String message;
 
-		public static enum RevengStatus {
-			SUCCESS, FAILURE
-		}
+		public enum RevengStatus { SUCCESS, FAILURE }
 
 		public URevengResponse(RevengStatus status, Optional<AOTree> optLearnedTree, String message) {
 			this.status = status;
