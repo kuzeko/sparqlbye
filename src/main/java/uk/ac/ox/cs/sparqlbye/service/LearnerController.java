@@ -74,10 +74,11 @@ public class LearnerController implements Observer {
 
 	public enum ApiErrorType { NO_SPARQL_ENDPOINT }
 
-	private static final String LOCAL_SPARQL_SERVICE_ENDPOINT = "http://localhost:8890/sparql";
+	private String paramLocalSparqlServiceEndpoint;
+	private String paramGraphUri;
 
-	private static final Function<Query, QueryExecution> queryToQueryExecution = (query) ->
-	QueryExecutionFactory.sparqlService(LOCAL_SPARQL_SERVICE_ENDPOINT, query);
+	private final Function<Query, QueryExecution> queryToQueryExecution = (query) ->
+	QueryExecutionFactory.sparqlService(paramLocalSparqlServiceEndpoint, query);
 
 	private static LearnerController INSTANCE;
 
@@ -89,6 +90,14 @@ public class LearnerController implements Observer {
 //		sessions        = new ArrayList<>();
 		executorService = Executors.newFixedThreadPool(10);
 	}
+
+	public void setParamLocalSparqlServiceEndpoint(String paramLocalSparqlServiceEndpoint) {
+        this.paramLocalSparqlServiceEndpoint = paramLocalSparqlServiceEndpoint;
+    }
+
+    public void setParamGraphUri(String paramGraphUri) {
+        this.paramGraphUri = paramGraphUri;
+    }
 
 	/**
 	 * This is the entry point for all updates coming from the Spark service.
@@ -155,7 +164,7 @@ public class LearnerController implements Observer {
 
 		String keywordsString = jsonMessage.getString(API_KEY_QUERY_TEXT);
 		int    callbackId     = jsonMessage.getInt(API_KEY_CALLBACK_ID);
-		String queryString    = UtilsLearnerController.makeKeywordSearchQuery(keywordsString);
+		String queryString    = UtilsLearnerController.makeKeywordSearchQuery(keywordsString, paramGraphUri);
 		Query  query          = QueryFactory.create(queryString);
 
 		CompletableFuture.supplyAsync(() -> {

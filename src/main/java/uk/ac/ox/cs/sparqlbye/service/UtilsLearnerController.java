@@ -14,7 +14,7 @@ abstract class UtilsLearnerController {
 	public static final String KEYWORD_SEARCH_QUERY_VAR_LABEL = "label";
 	public static final String KEYWORD_SEARCH_QUERY_VAR_TYPE = "type";
 
-	public static String makeKeywordSearchQuery(String keywordsString) {
+	public static String makeKeywordSearchQuery(String keywordsString, String graphUri) {
 		log.info("makeKeyworkSearchQuery(): Simple implementation for keyword search!");
 
 		//		String[] keywords = keywordsString.split(" ");
@@ -35,7 +35,7 @@ abstract class UtilsLearnerController {
 
 		return
 			"select " + uri + " " + label + " " + type + " "
-			+ "from <http://dbpedia.org/> where { "
+			+ "from <" + graphUri + "> where { "
 			+ uri + " " + RDFS_LABEL + " " + label + " . "
 			+ label + " <bif:contains> " + "'" + keywordsString + "' . "
 			+ "{ "
