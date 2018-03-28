@@ -32,24 +32,24 @@ public abstract class UtilsQuerySolutions {
 				.collect(Collectors.toSet());
 	}
 
-	public static boolean checkQuerySolutionEquality(QuerySolution a, QuerySolution b) {
-		if(a == null || b == null) { throw new IllegalArgumentException(); }
-		if(a == b) { return true; }
-
-		Set<Var> domA = UtilsJena.dom(a);
-		Set<Var> domB = UtilsJena.dom(b);
-
-		if(!domA.equals(domB)) { return false; }
-
-		for(Var var : domA) {
-			RDFNode nodeA = a.get(var.getName());
-			RDFNode nodeB = b.get(var.getName());
-			if(!nodeA.equals(nodeB)) {
-				return false;
-			}
-		}
-
-		return true;
-	}
+//	public static boolean checkQuerySolutionEquality(QuerySolution a, QuerySolution b) {
+//		if(a == null || b == null) { throw new IllegalArgumentException(); }
+//		if(a == b) { return true; }
+//
+//		Set<Var> domA = UtilsJena.dom(a);
+//		Set<Var> domB = UtilsJena.dom(b);
+//
+//		if(!domA.equals(domB)) { return false; }
+//
+//		for(Var var : domA) {
+//			RDFNode nodeA = a.get(var.getName());
+//			RDFNode nodeB = b.get(var.getName());
+//			if(!nodeA.equals(nodeB)) {
+//				return false;
+//			}
+//		}
+//
+//		return true;
+//	}
 
 }

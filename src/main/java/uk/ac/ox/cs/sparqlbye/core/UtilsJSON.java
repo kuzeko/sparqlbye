@@ -2,9 +2,6 @@ package uk.ac.ox.cs.sparqlbye.core;
 
 public abstract class UtilsJSON {
 
-
-
-
 //	private static final Logger log = Logger.getLogger(Utils.class);
 //
 //	private static final String SPARQL_JSON_TYPE_KEY = "type";

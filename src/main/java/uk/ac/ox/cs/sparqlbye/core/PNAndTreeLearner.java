@@ -17,10 +17,10 @@ import uk.ac.ox.cs.sparqlbye.core.UtilsLearner.UTripleProducer;
 
 public final class PNAndTreeLearner extends LearnerBase {
 
-	public PNAndTreeLearner(
-			Set<QuerySolution>              positiveSolutions,
-			Set<QuerySolution>              negativeSolutions,
-			List<String>                    badUris,
+	PNAndTreeLearner(
+			Set<QuerySolution> positiveSolutions,
+			Set<QuerySolution> negativeSolutions,
+			List<String> badUris,
 			Function<Query, QueryExecution> queryToQueryExecution) {
 		super(positiveSolutions, negativeSolutions, badUris, queryToQueryExecution);
 	}
@@ -40,7 +40,7 @@ public final class PNAndTreeLearner extends LearnerBase {
 		return checkPasses ? Optional.of(learnedTree) : Optional.empty();
 	}
 
-	private boolean _learnNode(AOTree node) {
+	private void _learnNode(AOTree node) {
 		// Prepare signatures (domains):
 		Set<Var> scopedVars = node.getDesiredScopedVars();
 		Set<Var> newVars    = node.getDesiredTopVars();
@@ -65,7 +65,7 @@ public final class PNAndTreeLearner extends LearnerBase {
 
 				while(tripleProducer.hasNext()) {
 					Triple nextTriple = tripleProducer.next(); // this triple works. does it kill?
-					if( _processTriplev3(nextTriple, scopedVars, killableSolutions, mentionedVars, triples, newVars) ) {
+					if( _processTriplev3(nextTriple, killableSolutions, mentionedVars, triples, newVars) ) {
 						System.out.println("Learner: Triples = " + triples);
 						System.out.println("Learner: Proceed to next node.");
 						nodeReady = true;
@@ -86,7 +86,7 @@ public final class PNAndTreeLearner extends LearnerBase {
 
 					while(tripleProducer.hasNext()) {
 						Triple nextTriple = tripleProducer.next(); // this triple works. does it kill?
-						if( _processTriplev3(nextTriple, scopedVars, killableSolutions, mentionedVars, triples, newVars) ) {
+						if( _processTriplev3(nextTriple, killableSolutions, mentionedVars, triples, newVars) ) {
 							//							System.out.println("Learner: killable is empty and all vars were mentioned.");
 							System.out.println("Learner: Triples = " + triples);
 							System.out.println("Learner: Proceed to next node.");
@@ -108,7 +108,7 @@ public final class PNAndTreeLearner extends LearnerBase {
 
 					while(tripleProducer.hasNext()) {
 						Triple nextTriple = tripleProducer.next(); // this triple works. does it kill?
-						if( _processTriplev3(nextTriple, scopedVars, killableSolutions, mentionedVars, triples, newVars) ) {
+						if( _processTriplev3(nextTriple, killableSolutions, mentionedVars, triples, newVars) ) {
 							//							System.out.println("Learner: killable is empty and all vars were mentioned.");
 							System.out.println("Learner: Triples = " + triples);
 							System.out.println("Learner: Proceed to next node.");
@@ -130,7 +130,7 @@ public final class PNAndTreeLearner extends LearnerBase {
 
 					while(tripleProducer.hasNext()) {
 						Triple nextTriple = tripleProducer.next(); // this triple works. does it kill?
-						if( _processTriplev3(nextTriple, scopedVars, killableSolutions, mentionedVars, triples, newVars) ) {
+						if( _processTriplev3(nextTriple, killableSolutions, mentionedVars, triples, newVars) ) {
 							//							System.out.println("Learner: killable is empty and all vars were mentioned.");
 							System.out.println("Learner: Triples = " + triples);
 							System.out.println("Learner: Proceed to next node.");
@@ -152,7 +152,7 @@ public final class PNAndTreeLearner extends LearnerBase {
 
 					while(tripleProducer.hasNext()) {
 						Triple nextTriple = tripleProducer.next(); // this triple works. does it kill?
-						if( _processTriplev3(nextTriple, scopedVars, killableSolutions, mentionedVars, triples, newVars) ) {
+						if( _processTriplev3(nextTriple, killableSolutions, mentionedVars, triples, newVars) ) {
 							//							System.out.println("Learner: killable is empty and all vars were mentioned.");
 							System.out.println("Learner: Triples = " + triples);
 							System.out.println("Learner: Proceed to next node.");
@@ -174,7 +174,7 @@ public final class PNAndTreeLearner extends LearnerBase {
 
 					while(tripleProducer.hasNext()) {
 						Triple nextTriple = tripleProducer.next(); // this triple works. does it kill?
-						if( _processTriplev3(nextTriple, scopedVars, killableSolutions, mentionedVars, triples, newVars) ) {
+						if( _processTriplev3(nextTriple, killableSolutions, mentionedVars, triples, newVars) ) {
 							//							System.out.println("Learner: killable is empty and all vars were mentioned.");
 							System.out.println("Learner: Triples = " + triples);
 							System.out.println("Learner: Proceed to next node.");
@@ -196,7 +196,7 @@ public final class PNAndTreeLearner extends LearnerBase {
 
 					while(tripleProducer.hasNext()) {
 						Triple nextTriple = tripleProducer.next(); // this triple works. does it kill?
-						if( _processTriplev3(nextTriple, scopedVars, killableSolutions, mentionedVars, triples, newVars) ) {
+						if( _processTriplev3(nextTriple, killableSolutions, mentionedVars, triples, newVars) ) {
 							//							System.out.println("Learner: killable is empty and all vars were mentioned.");
 							System.out.println("Learner: Triples = " + triples);
 							System.out.println("Learner: Proceed to next node.");
@@ -214,15 +214,13 @@ public final class PNAndTreeLearner extends LearnerBase {
 			for(Triple t : triples) {
 				node.addTriple(t);
 			}
-			return true;
 		} else {
 			System.out.println("Malformed node!");
-			return false;
 		}
 	}
 
-	private boolean _processTriplev3(Triple triple, Set<Var> sig, Set<QuerySolution> killable,
-			Set<Var> mentionedVars, Set<Triple> triples, Set<Var> newVars) {
+	private boolean _processTriplev3(Triple triple, Set<QuerySolution> killable,
+									 Set<Var> mentionedVars, Set<Triple> triples, Set<Var> newVars) {
 		Set<Var> tDom = UtilsJena.dom(triple);
 
 		Set<QuerySolution> killed =
@@ -233,17 +231,14 @@ public final class PNAndTreeLearner extends LearnerBase {
 			System.out.println("Learner: Adding triple pattern: " + triple);
 			triples.add(triple);
 			mentionedVars.addAll(tDom);
-		} else {
-			//			System.out.println("Learner: Adding triple pattern (although not needed?): " + triple);
-			//			triples.add(triple);
-			//			mentionedVars.addAll(tDom);
 		}
+//		else {
+			//	System.out.println("Learner: Adding triple pattern (although not needed?): " + triple);
+			//	triples.add(triple);
+			//	mentionedVars.addAll(tDom);
+//		}
 
-		if( killable.isEmpty() && mentionedVars.containsAll(newVars) ) {
-			return true;
-		} else {
-			return false;
-		}
+		return killable.isEmpty() && mentionedVars.containsAll(newVars);
 	}
 
 }

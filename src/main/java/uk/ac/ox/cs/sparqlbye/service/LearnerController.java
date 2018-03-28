@@ -81,12 +81,12 @@ public class LearnerController implements Observer {
 
 	private static LearnerController INSTANCE;
 
-	private final List<Session>   sessions;
+//	private final List<Session>   sessions;
 	private final ExecutorService executorService;
 
 	private LearnerController() {
 		log.info("LearnerController()");
-		sessions        = new ArrayList<>();
+//		sessions        = new ArrayList<>();
 		executorService = Executors.newFixedThreadPool(10);
 	}
 
@@ -112,12 +112,12 @@ public class LearnerController implements Observer {
 
 	private void onConnect(Session user) {
 		log.info("LearnerController.onConnect(user)");
-		sessions.add(user);
+//		sessions.add(user);
 	}
 
 	private void onClose(Session user, int statusCode, String reason) {
 		log.info("LearnerController.onClose(user, "+statusCode+", "+reason+")");
-		sessions.remove(user);
+//		sessions.remove(user);
 	}
 
 	/**
@@ -154,9 +154,9 @@ public class LearnerController implements Observer {
 		log.info("executeSearch()");
 
 		String keywordsString = jsonMessage.getString(API_KEY_QUERY_TEXT);
-		int callbackId = jsonMessage.getInt(API_KEY_CALLBACK_ID);
-		String queryString = UtilsLearnerController.makeKeywordSearchQuery(keywordsString);
-		Query query = QueryFactory.create(queryString);
+		int    callbackId     = jsonMessage.getInt(API_KEY_CALLBACK_ID);
+		String queryString    = UtilsLearnerController.makeKeywordSearchQuery(keywordsString);
+		Query  query          = QueryFactory.create(queryString);
 
 		CompletableFuture.supplyAsync(() -> {
 			JSONArray jsonTuples = new JSONArray();
@@ -298,7 +298,7 @@ public class LearnerController implements Observer {
 			}
 
 			AOTree learnedTree = response.getOptLearnedTree().get();
-			Op learnedOp = UtilsJena.convertAOFTreeToOp(learnedTree);
+			Op learnedOp = UtilsJena.convertAOTreeToOp(learnedTree);
 			Query learnedQuery = OpAsQuery.asQuery(learnedOp);
 
 			log.info("ready with learned tree...");
@@ -389,8 +389,7 @@ public class LearnerController implements Observer {
 		return null;
 	}
 
-	private static String makeErrorResponseMessage(String command, int callbackId,
-			ApiErrorType apiErrorType) {
+	private static String makeErrorResponseMessage(String command, int callbackId, ApiErrorType apiErrorType) {
 		JSONObject jsonResponse = new JSONObject();
 		jsonResponse.put(API_KEY_CALLBACK_ID, callbackId);
 		jsonResponse.put(API_KEY_COMMAND, command);

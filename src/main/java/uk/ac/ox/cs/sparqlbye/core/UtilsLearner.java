@@ -96,7 +96,7 @@ public abstract class UtilsLearner {
 		}
 	}
 
-	/**
+	/*
 	 * Check an AOFTree for compatibility for positive and negative solutions.
 	 * If intermediate results are needed, use {@code ULearnedQueryChecker} instead.
 	 *
@@ -106,24 +106,24 @@ public abstract class UtilsLearner {
 	 * @param getQueryExecution
 	 * @return
 	 */
-	public static boolean checkLearnedQuery(
-			AOTree                          learnedTree,
-			Collection<QuerySolution>       pSols,
-			Collection<QuerySolution>       nSols,
-			Function<Query, QueryExecution> getQueryExecution) {
-		System.out.println("checkLearnedQuery()");
-
-		if(!UtilsAOTrees.isWellFormed(learnedTree)) {
-			System.out.println("  not well formed!");
-			return false;
-		}
-
-		System.out.println("  checkLearnedQuery: learnedQuery = " + learnedTree);
-
-		return pSols.stream().allMatch(pSol -> execMembershipQuery(learnedTree, pSol, getQueryExecution))
-				&&
-				nSols.stream().noneMatch(nSol -> execMembershipQuery(learnedTree, nSol, getQueryExecution));
-	}
+//	public static boolean checkLearnedQuery(
+//			AOTree                          learnedTree,
+//			Collection<QuerySolution>       pSols,
+//			Collection<QuerySolution>       nSols,
+//			Function<Query, QueryExecution> getQueryExecution) {
+//		System.out.println("checkLearnedQuery()");
+//
+//		if(!UtilsAOTrees.isWellFormed(learnedTree)) {
+//			System.out.println("  not well formed!");
+//			return false;
+//		}
+//
+//		System.out.println("  checkLearnedQuery: learnedQuery = " + learnedTree);
+//
+//		return pSols.stream().allMatch(pSol -> execMembershipQuery(learnedTree, pSol, getQueryExecution))
+//				&&
+//				nSols.stream().noneMatch(nSol -> execMembershipQuery(learnedTree, nSol, getQueryExecution));
+//	}
 
 	static boolean execMembershipQuery(
 			AOTree                          learnedTree,
@@ -131,7 +131,7 @@ public abstract class UtilsLearner {
 			Function<Query, QueryExecution> getQueryExecution) {
 		System.out.println("execMembershipQuery()");
 
-		Op    learnedOp       = UtilsJena.convertAOFTreeToOp(learnedTree);
+		Op    learnedOp       = UtilsJena.convertAOTreeToOp(learnedTree);
 		Query learnedQuery    = OpAsQuery.asQuery(learnedOp);
 		Query membershipQuery = UtilsJena.toMembershipQuery(learnedQuery, solution);
 
@@ -139,7 +139,6 @@ public abstract class UtilsLearner {
 			return queryExecution.execAsk();
 		}
 	}
-
 
 	static Set<QuerySolution> killedByTriples(
 			Triple                         triple,
@@ -152,17 +151,15 @@ public abstract class UtilsLearner {
 		Set<Triple> candTriples = new HashSet<>(triples);
 		candTriples.add(triple);
 
-		Set<QuerySolution> killed = killables.stream()
+		return killables.stream()
 				.filter(sol -> triplesKillSol(candTriples, sol, queryToQueryExecution))
 				.collect(Collectors.toSet());
-
-		return killed;
 	}
 
-	static boolean triplesKillSol(
-			Collection<Triple>             triples,
-			QuerySolution                  solution,
-			Function<Query,QueryExecution> queryToQueryExecution) {
+	private static boolean triplesKillSol(
+            Collection<Triple> triples,
+            QuerySolution solution,
+            Function<Query, QueryExecution> queryToQueryExecution) {
 
 		Map<Var,Node> solutionMap = UtilsJena.querySolutionAsMap(solution);
 
@@ -182,7 +179,7 @@ public abstract class UtilsLearner {
 			q.setQueryPattern(block);
 			q.setQueryAskType();
 
-			boolean ans = false;
+			boolean ans;
 			try(QueryExecution qe = queryToQueryExecution.apply(q)) {
 				ans = qe.execAsk();
 			}
@@ -192,9 +189,9 @@ public abstract class UtilsLearner {
 		}
 	}
 
-	static boolean hasSolution(
-			Collection<Triple>             triples,
-			Function<Query,QueryExecution> queryToQueryExecution) {
+	private static boolean hasSolution(
+            Collection<Triple> triples,
+            Function<Query, QueryExecution> queryToQueryExecution) {
 
 		BasicPattern pattern = new BasicPattern();
 		for(Triple triple : triples) {
@@ -216,7 +213,7 @@ public abstract class UtilsLearner {
 
 		public enum RevengStatus { SUCCESS, FAILURE }
 
-		public URevengResponse(RevengStatus status, Optional<AOTree> optLearnedTree, String message) {
+		URevengResponse(RevengStatus status, Optional<AOTree> optLearnedTree, String message) {
 			this.status = status;
 			this.optLearnedTree = optLearnedTree;
 			this.message = message;
@@ -229,7 +226,6 @@ public abstract class UtilsLearner {
 
 	static final class UTripleProducer implements Iterator<Triple> {
 		private static final int MAX_TRIPLES_IN_SPARQL_QUERY = 70;
-		//		private Set<QuerySolution> solutions;
 		private Triple         initialTriple;
 		private QueryExecution qExecution;
 		private String         qType;
@@ -238,16 +234,14 @@ public abstract class UtilsLearner {
 		private ResultSet      resultSet;
 		private List<String>   badUris;
 
-//		private final Function<Query,QueryExecution> queryToQueryExecution;
-
-		public UTripleProducer(
-				Var                            s,
-				Var                            p,
-				Var                            o,
-				Set<Var>                       sig,
-				Set<QuerySolution>             solutions,
-				List<String>                   badUris,
-				Function<Query,QueryExecution> queryToQueryExecution) {
+		UTripleProducer(
+                Var s,
+                Var p,
+                Var o,
+                Set<Var> sig,
+                Set<QuerySolution> solutions,
+                List<String> badUris,
+                Function<Query, QueryExecution> queryToQueryExecution) {
 			this.badUris = new ArrayList<>(badUris);
 
 			// Prepare interesting mappings:
@@ -328,7 +322,7 @@ public abstract class UtilsLearner {
 						newNodes[2] = Var.alloc("tempO");
 					}
 
-					Triple t3 = null;
+					Triple t3;
 					if(!isUseless) {
 						t3 = Triple.create(newNodes[0], newNodes[1], newNodes[2]);
 						if(bp.size() <= MAX_TRIPLES_IN_SPARQL_QUERY) {
@@ -409,15 +403,15 @@ public abstract class UtilsLearner {
 				qAskFinished = true;
 				return initialTriple;
 			} else {
-				QuerySolution solution = null;
-				Triple ans = null;
+				QuerySolution solution;
+				Triple ans;
 
 				do {
 					solution = resultSet.next();
 					ans      = UtilsJena.looseEval(initialTriple, solution);
 				} while(UtilsJena.constants(ans).stream()
-						.filter(node -> node.isURI())
-						.map(node -> node.getURI())
+						.filter(Node::isURI)
+						.map(Node::getURI)
 						.anyMatch(uri -> badUris.contains(uri)));
 
 				return ans;
@@ -439,7 +433,7 @@ public abstract class UtilsLearner {
 		private int type;
 		private int[] current;
 
-		public UTripleTypeLooper(Collection<Var> vars) {
+		UTripleTypeLooper(Collection<Var> vars) {
 			this.vars = new ArrayList<>(vars);
 			type = 0;
 			current = new int[3];
@@ -458,11 +452,9 @@ public abstract class UtilsLearner {
 			Var m = current[1] == -1 ? null : vars.get(current[1]);
 			Var r = current[2] == -1 ? null : vars.get(current[2]);
 
-			org.apache.commons.lang3.tuple.Triple<Var, Var, Var> tripleType =
-					new ImmutableTriple<Var, Var, Var>(l, m, r);
+			org.apache.commons.lang3.tuple.Triple<Var, Var, Var> tripleType = new ImmutableTriple<>(l, m, r);
 
 			_inc();
-
 			return tripleType;
 		}
 

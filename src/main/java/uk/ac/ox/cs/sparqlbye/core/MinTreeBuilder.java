@@ -21,19 +21,17 @@ public final class MinTreeBuilder {
 	private final List<String> badUris;
 	private final Function<Query, QueryExecution> queryToQueryExecution;
 
-	private AOTree learnedTree;
-
-	public MinTreeBuilder(
+	MinTreeBuilder(
 			Collection<QuerySolution> pSols,
 			List<String> badUris,
-			Function<Query,QueryExecution> queryToQueryExecution) {
+			Function<Query, QueryExecution> queryToQueryExecution) {
 		this.pSols = new HashSet<>(pSols);
 		this.badUris = new ArrayList<>(badUris);
 		this.queryToQueryExecution = Objects.requireNonNull(queryToQueryExecution);
 	}
 
 	public AOTree buildMinTree() {
-		learnedTree = UtilsLearner.buildTemplateTree(pSols);
+		AOTree learnedTree = UtilsLearner.buildTemplateTree(pSols);
 		buildNode(learnedTree);
 		return learnedTree;
 	}
@@ -48,7 +46,7 @@ public final class MinTreeBuilder {
 				.filter(solution -> {
 					Set<Var> domain = UtilsJena.dom(solution);
 					return domain.containsAll(higherVars)
-							&& newVars.stream().noneMatch(var -> domain.contains(var));
+							&& newVars.stream().noneMatch(domain::contains);
 				})
 				.collect(Collectors.toSet());
 

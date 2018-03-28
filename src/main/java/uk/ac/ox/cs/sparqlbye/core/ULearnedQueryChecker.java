@@ -13,19 +13,18 @@ import org.apache.jena.sparql.algebra.OpAsQuery;
 
 public class ULearnedQueryChecker {
 
-	private AOTree                  learnedTree;
-	private Set<QuerySolution>      pSols;
-	private Set<QuerySolution>      nSols;
-	Function<Query, QueryExecution> getQueryExecution;
+	private AOTree                          learnedTree;
+	private Set<QuerySolution>              pSols;
+	private Set<QuerySolution>              nSols;
+	private Function<Query, QueryExecution> getQueryExecution;
+	private Set<QuerySolution>              pSolsBad;
+	private Set<QuerySolution>              nSolsBad;
+	private boolean                         isWellFormed;
 
-	private Set<QuerySolution>      pSolsBad;
-	private Set<QuerySolution>      nSolsBad;
-	private boolean                 isWellFormed;
-
-	public ULearnedQueryChecker(
-			AOTree                          learnedTree,
-			Collection<QuerySolution>       positiveSolutions,
-			Collection<QuerySolution>       negativeSolutions,
+	ULearnedQueryChecker(
+			AOTree learnedTree,
+			Collection<QuerySolution> positiveSolutions,
+			Collection<QuerySolution> negativeSolutions,
 			Function<Query, QueryExecution> getQueryExecution) {
 		this.learnedTree = learnedTree;
 		this.pSols = new HashSet<>(positiveSolutions);
@@ -47,10 +46,8 @@ public class ULearnedQueryChecker {
 			return false;
 		}
 
-		Op    learnedOp    = UtilsJena.convertAOFTreeToOp(learnedTree);
+		Op    learnedOp    = UtilsJena.convertAOTreeToOp(learnedTree);
 		Query learnedQuery = OpAsQuery.asQuery(learnedOp);
-
-//		System.out.println("  checkLearnedQuery: learnedQuery = " + learnedQuery);
 
 		// Check positive examples:
 		for(QuerySolution solution : pSols) {
@@ -72,17 +69,11 @@ public class ULearnedQueryChecker {
 			try(QueryExecution queryExecution = getQueryExecution.apply(membershipQuery)) {
 				if(queryExecution.execAsk()) {
 					nSolsBad.add(solution);
-//					System.out.println("         checkLearnedQuery_v2: negative example is an answer: " + solution);
-//					return false;
 				}
 			}
 		}
 
-		if(pSolsBad.size() > 0 || nSolsBad.size() > 0) {
-			return false;
-		} else {
-			return true;
-		}
+		return (pSolsBad.size() > 0 || nSolsBad.size() > 0);
 	}
 
 }

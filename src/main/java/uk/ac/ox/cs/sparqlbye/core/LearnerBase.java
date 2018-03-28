@@ -13,17 +13,17 @@ import org.apache.jena.query.QuerySolution;
 
 public class LearnerBase {
 
-	protected final Set<QuerySolution>              positiveSolutions;
-	protected final Set<QuerySolution>              negativeSolutions;
-	protected final List<String>                    badUris;
-	protected final Function<Query, QueryExecution> queryToQueryExecution;
+	final Set<QuerySolution>              positiveSolutions;
+	final Set<QuerySolution>              negativeSolutions;
+	final List<String>                    badUris;
+	final Function<Query, QueryExecution> queryToQueryExecution;
 
-	protected AOTree learnedTree;
+	AOTree learnedTree;
 
-	public LearnerBase(
-			Set<QuerySolution>              positiveSolutions,
-			Set<QuerySolution>              negativeSolutions,
-			List<String>                    badUris,
+	LearnerBase(
+			Set<QuerySolution> positiveSolutions,
+			Set<QuerySolution> negativeSolutions,
+			List<String> badUris,
 			Function<Query, QueryExecution> queryToQueryExecution) {
 		this.positiveSolutions     = new HashSet<>(positiveSolutions);
 		this.negativeSolutions     = new HashSet<>(negativeSolutions);

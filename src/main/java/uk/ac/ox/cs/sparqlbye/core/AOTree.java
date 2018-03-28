@@ -17,16 +17,15 @@ import org.apache.jena.sparql.core.Var;
  *
  */
 public final class AOTree {
-	private AOTree               parent;
-	private final List<AOTree>   children;
-	private final List<Triple>   triples;
-	private final Set<Var>       desiredTopVars;
+	private AOTree             parent;
+	private final List<AOTree> children;
+	private final List<Triple> triples;
+	private final Set<Var>     desiredTopVars;
 
 	private AOTree() {
 		parent   = null;
 		children = new ArrayList<>();
 		triples  = new ArrayList<>();
-
 		desiredTopVars = new HashSet<>();
 	}
 
@@ -37,7 +36,7 @@ public final class AOTree {
 	 *
 	 * This method modifies {@code child.parent}.
 	 *
-	 * @param child
+	 * @param child an {@code AOTree} to add as a child of this node.
 	 */
 	public void addChild(AOTree child) {
 		children.add(child);
@@ -70,10 +69,10 @@ public final class AOTree {
 		}
 	}
 
-	public Set<Triple>  getMandTriples()     { return Collections.unmodifiableSet(new HashSet<>(triples));        }
-	public List<Triple> getMandTriplesList() { return Collections.unmodifiableList(triples); }
-	public Set<Triple>  getScopedTriples()   { return UtilsSets.union(this.getMandTriples(), this.getHigherTriples()); }
-	public Set<Triple>  getHigherTriples()   {
+	public Set<Triple>   getMandTriples()    { return Collections.unmodifiableSet(new HashSet<>(triples)); }
+//	public List<Triple>  getMandTriplesList() { return Collections.unmodifiableList(triples); }
+    private Set<Triple>  getScopedTriples()  { return UtilsSets.union(this.getMandTriples(), this.getHigherTriples()); }
+	private Set<Triple>  getHigherTriples()  {
 		if(this.getParent() == null) {
 			return Collections.emptySet();
 		} else {
@@ -84,14 +83,10 @@ public final class AOTree {
 	public Set<Var> getVarsInSubtree() { return UtilsJena.dom(this.getTriplesInSubtree()); }
 	public Set<Var> getMandVars()      { return UtilsJena.dom(triples);                    }
 	public Set<Var> getHigherVars()    { return UtilsJena.dom(this.getHigherTriples());    }
-	public Set<Var> getScopedVars()    { return UtilsJena.dom(this.getScopedTriples());    }
-	public Set<Var> getTopVars() {
-		return UtilsSets.diff( this.getMandVars(), this.getHigherVars() );
-	}
+//	public Set<Var> getScopedVars()    { return UtilsJena.dom(this.getScopedTriples());    }
+	public Set<Var> getTopVars()       { return UtilsSets.diff( this.getMandVars(), this.getHigherVars() ); }
 
-	public Set<Var> getDesiredScopedVars() {
-		return UtilsSets.union(this.desiredTopVars, this.getDesiredHigherVars());
-	}
+	public Set<Var> getDesiredScopedVars() { return UtilsSets.union(this.desiredTopVars, this.getDesiredHigherVars()); }
 	public Set<Var> getDesiredHigherVars() {
 		if(parent == null) {
 			return Collections.emptySet();
@@ -100,52 +95,29 @@ public final class AOTree {
 		}
 	}
 
-
-	/* Exprs */
-
-//	public List<Expr> getMandExprs() { return Collections.unmodifiableList(exprs); }
-
-//	public Set<Expr> getExprsInSubtree() {
-//		Set<Expr> ans = new HashSet<>();
-//		accExprs(ans);
-//		return ans;
-//	}
-//	private void accExprs(Set<Expr> ans) {
-//		ans.addAll(exprs);
-//		for(AOFTree c : children) {
-//			c.accExprs(ans);
+//	private int getOptDepth() {
+//		if(children.isEmpty()) {
+//			return 0;
+//		} else {
+//			return children.stream()
+//					.map(AOTree::getOptDepth)
+//					.max((a, b) -> Integer.compare(a, b))
+//					.get() + 1;
 //		}
 //	}
 
-
-	public int getOptDepth() {
-		if(children.isEmpty()) {
-			return 0;
-		} else {
-			return children.stream()
-					.map(child -> child.getOptDepth())
-					.max((a, b) -> Integer.compare(a, b))
-					.get() + 1;
-		}
-	}
-
-
 	@Override
-	public String toString() {
-		return this._toString(0);
-	}
+	public String toString() { return this._toString(0); }
+
 	private String _toString(int indent) {
 		StringBuilder aux = new StringBuilder();
 		for(int i = 0; i < indent; i++) {
 			aux.append("  ");
 		}
 		String padding = aux.toString();
-
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("Tree: ").append(triples);
-
-//		if(!exprs.isEmpty()) { sb.append(" FILTER ").append(exprs); }
 		sb.append(" topvars: ").append(getTopVars());
 		if(!desiredTopVars.isEmpty()) { sb.append(" desiredTopVars: ").append(desiredTopVars); }
 		sb.append("\n");
@@ -157,7 +129,6 @@ public final class AOTree {
 
 		return sb.toString();
 	}
-
 
 	public static AOTree from(Collection<Triple> triples) {
 		AOTree tree = new AOTree();
