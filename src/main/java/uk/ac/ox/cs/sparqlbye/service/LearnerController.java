@@ -42,28 +42,32 @@ import uk.ac.ox.cs.sparqlbye.service.LearnerWebSocketHandler.Update;
 public class LearnerController implements Observer {
 	private static final Logger log = Logger.getLogger(LearnerController.class);
 
-	private static final String API_IN_QUERY_STRING_KEY = "queryText";
-	private static final String API_ALL_CALLBACKID_KEY = "callback_id";
-	private static final String API_ALL_COMMAND_KEY = "command";
-	private static final String API_ALL_EXECUTE_COMMAND = "execute";
-	private static final String API_ALL_COMMAND_VALUE_REVENG = "reveng";
-	private static final String API_ALL_STATUS_KEY = "status";
-	private static final String API_ALL_STATUS_VALUE_ERROR = "error";
-	private static final String API_ALL_MESSAGE_KEY = "message";
-	private static final String API_ALL_ERROR_MESSAGE_VAL = "no sparql endpoint found";
+	private static final String API_KEY_QUERY_TEXT = "queryText";
+	private static final String API_KEY_CALLBACK_ID = "callback_id";
 
-	private static final String API_ALL_SEARCH_COMMAND = "search";
-	private static final String API_KEYWORD_SEARCH_ANSWERS_KEY = "pairs";
-	private static final String API_KEYWORD_SEARCH_URI_KEY = "uri";
-	private static final String API_KEYWORD_SEARCH_LABEL_KEY = "label";
-	private static final String API_KEYWORD_SEARCH_TYPE_KEY = "type";
+	private static final String API_KEY_COMMAND = "command";
+	private static final String API_VAL_COMMAND_EXECUTE = "execute";
+    private static final String API_VAL_COMMAND_SEARCH = "search";
+	private static final String API_VAL_COMMAND_REVENG = "reveng";
 
-	private static final String API_EXECUTE_QUERY_VIRTUOSO_KEY = "virtuoso_response";
-	private static final String API_KEY_LEARNED_QUERY = "learnedQuery";
-	private static final String API_KEY_P_BINDINGS = "pBindings";
-	private static final String API_KEY_N_BINDINGS = "nBindings";
-	private static final String API_KEY_BAD_URIS = "badUris";
-	private static final String API_KEY_URIS_USED = "urisUsed";
+    private static final String API_KEY_EXECUTE_VIRTUOSO_RESPONSE = "virtuoso_response";
+
+	private static final String API_KEY_SEARCH_ANSWERS = "pairs";
+	private static final String API_KEY_SEARCH_URI = "uri";
+	private static final String API_KEY_SEARCH_LABEL = "label";
+	private static final String API_KEY_SEARCH_TYPE = "type";
+
+	private static final String API_KEY_REVENG_LEARNED_QUERY = "learnedQuery";
+	private static final String API_KEY_REVENG_P_BINDINGS = "pBindings";
+	private static final String API_KEY_REVENG_N_BINDINGS = "nBindings";
+	private static final String API_KEY_REVENG_BAD_URIS = "badUris";
+	private static final String API_KEY_REVENG_URIS_USED = "urisUsed";
+
+    private static final String API_KEY_MESSAGE = "message";
+    private static final String API_VAL_MESSAGE_ERROR = "no sparql endpoint found";
+    private static final String API_KEY_STATUS = "status";
+	private static final String API_VAL_STATUS_ERROR = "error";
+
 	// TODO: change this string to "answers"
 	//	private static final String EXAMPLES_KEY      = "pnExamples";
 	//	private static final String VIRTUOSO_KEY      = "virtuoso";
@@ -126,14 +130,14 @@ public class LearnerController implements Observer {
 		log.info("LearnerController.onMessage(user,"+message+")");
 
 		JSONObject jsonMessage = new JSONObject(message);
-		String     commandStr  = jsonMessage.getString(API_ALL_COMMAND_KEY);
+		String     commandStr  = jsonMessage.getString(API_KEY_COMMAND);
 
 		switch (commandStr) {
-		case API_ALL_EXECUTE_COMMAND:
+		case API_VAL_COMMAND_EXECUTE:
 			executeQuery(user, jsonMessage);  break;
-		case API_ALL_COMMAND_VALUE_REVENG:
+		case API_VAL_COMMAND_REVENG:
 			executeReveng(user, jsonMessage); break;
-		case API_ALL_SEARCH_COMMAND:
+		case API_VAL_COMMAND_SEARCH:
 			executeSearch(user, jsonMessage); break;
 		default:
 			throw new IllegalArgumentException("Unrecognised command: " + commandStr);
@@ -149,8 +153,8 @@ public class LearnerController implements Observer {
 	private void executeSearch(Session user, JSONObject jsonMessage) {
 		log.info("executeSearch()");
 
-		String keywordsString = jsonMessage.getString(API_IN_QUERY_STRING_KEY);
-		int callbackId = jsonMessage.getInt(API_ALL_CALLBACKID_KEY);
+		String keywordsString = jsonMessage.getString(API_KEY_QUERY_TEXT);
+		int callbackId = jsonMessage.getInt(API_KEY_CALLBACK_ID);
 		String queryString = UtilsLearnerController.makeKeywordSearchQuery(keywordsString);
 		Query query = QueryFactory.create(queryString);
 
@@ -173,9 +177,9 @@ public class LearnerController implements Observer {
 						.getLiteral(UtilsLearnerController.KEYWORD_SEARCH_QUERY_VAR_TYPE).getString();
 
 					JSONObject jsonTuple = new JSONObject();
-					jsonTuple.put(API_KEYWORD_SEARCH_URI_KEY, uri);
-					jsonTuple.put(API_KEYWORD_SEARCH_LABEL_KEY, label);
-					jsonTuple.put(API_KEYWORD_SEARCH_TYPE_KEY, type);
+					jsonTuple.put(API_KEY_SEARCH_URI, uri);
+					jsonTuple.put(API_KEY_SEARCH_LABEL, label);
+					jsonTuple.put(API_KEY_SEARCH_TYPE, type);
 					jsonTuples.put(jsonTuple);
 				}
 			} catch(QueryExceptionHTTP e) {
@@ -193,9 +197,9 @@ public class LearnerController implements Observer {
 			log.info("  sending response: " + jsonTuples);
 
 			JSONObject jsonResponse = new JSONObject();
-			jsonResponse.put(API_ALL_CALLBACKID_KEY, callbackId);
-			jsonResponse.put(API_ALL_COMMAND_KEY, API_ALL_SEARCH_COMMAND);
-			jsonResponse.put(API_KEYWORD_SEARCH_ANSWERS_KEY, jsonTuples);
+			jsonResponse.put(API_KEY_CALLBACK_ID, callbackId);
+			jsonResponse.put(API_KEY_COMMAND, API_VAL_COMMAND_SEARCH);
+			jsonResponse.put(API_KEY_SEARCH_ANSWERS, jsonTuples);
 			String responseMessage = String.valueOf(jsonResponse);
 
 			try {
@@ -207,15 +211,15 @@ public class LearnerController implements Observer {
 			}
 		}, executorService)
 		.exceptionally((exception) ->
-			handleExceptionAndSendResponse(exception, user, API_ALL_SEARCH_COMMAND, callbackId)
+			handleExceptionAndSendResponse(exception, user, API_VAL_COMMAND_SEARCH, callbackId)
 		);
 	}
 
 	private void executeQuery(Session user, JSONObject jsonMessage) {
 		log.info("executeQuery()");
 
-		String queryString = jsonMessage.getString(API_IN_QUERY_STRING_KEY);
-		int callbackId = jsonMessage.getInt(API_ALL_CALLBACKID_KEY);
+		String queryString = jsonMessage.getString(API_KEY_QUERY_TEXT);
+		int callbackId = jsonMessage.getInt(API_KEY_CALLBACK_ID);
 
 		CompletableFuture.supplyAsync(() -> {
 			log.info("  executing query");
@@ -240,8 +244,8 @@ public class LearnerController implements Observer {
 			log.info("  sending response");
 			JSONObject jsonSolutions = new JSONObject(jsonSolutionsStr);
 			JSONObject jsonResponse = new JSONObject();
-			jsonResponse.put(API_ALL_CALLBACKID_KEY, callbackId);
-			jsonResponse.put(API_EXECUTE_QUERY_VIRTUOSO_KEY, jsonSolutions);
+			jsonResponse.put(API_KEY_CALLBACK_ID, callbackId);
+			jsonResponse.put(API_KEY_EXECUTE_VIRTUOSO_RESPONSE, jsonSolutions);
 			String responseMessage = String.valueOf(jsonResponse);
 			log.info("  payload: " + responseMessage);
 
@@ -252,17 +256,17 @@ public class LearnerController implements Observer {
 			}
 		}, executorService)
 		.exceptionally((exception) ->
-			handleExceptionAndSendResponse(exception, user, API_ALL_EXECUTE_COMMAND, callbackId)
+			handleExceptionAndSendResponse(exception, user, API_VAL_COMMAND_EXECUTE, callbackId)
 		);
 	}
 
 	private void executeReveng(Session user, JSONObject jsonMessage) {
 		log.info("executeRevEng() " + jsonMessage.toString());
 
-		JSONObject jsonPBindings = jsonMessage.getJSONObject(API_KEY_P_BINDINGS);
-		JSONObject jsonNBindings = jsonMessage.getJSONObject(API_KEY_N_BINDINGS);
-		JSONArray jsonBadUris = jsonMessage.getJSONArray(API_KEY_BAD_URIS);
-		int callbackId = jsonMessage.getInt(API_ALL_CALLBACKID_KEY);
+		JSONObject jsonPBindings = jsonMessage.getJSONObject(API_KEY_REVENG_P_BINDINGS);
+		JSONObject jsonNBindings = jsonMessage.getJSONObject(API_KEY_REVENG_N_BINDINGS);
+		JSONArray jsonBadUris = jsonMessage.getJSONArray(API_KEY_REVENG_BAD_URIS);
+		int callbackId = jsonMessage.getInt(API_KEY_CALLBACK_ID);
 
 		CompletableFuture.supplyAsync(() -> {
 			ResultSet pResultSet =
@@ -300,9 +304,9 @@ public class LearnerController implements Observer {
 			log.info("ready with learned tree...");
 			try {
 				JSONObject resultObject = new JSONObject();
-				resultObject.put(API_ALL_COMMAND_KEY, API_ALL_COMMAND_VALUE_REVENG);
-				resultObject.put(API_KEY_LEARNED_QUERY, learnedQuery.toString());
-				resultObject.put(API_ALL_CALLBACKID_KEY, callbackId);
+				resultObject.put(API_KEY_COMMAND, API_VAL_COMMAND_REVENG);
+				resultObject.put(API_KEY_REVENG_LEARNED_QUERY, learnedQuery.toString());
+				resultObject.put(API_KEY_CALLBACK_ID, callbackId);
 
 				// prepare json array of uris used:
 				Set<String> urisUsed = UtilsJena.urisInTriples(learnedTree.getTriplesInSubtree());
@@ -312,7 +316,7 @@ public class LearnerController implements Observer {
 					jsonUris.put(uri);
 				}
 
-				resultObject.put(API_KEY_URIS_USED, jsonUris);
+				resultObject.put(API_KEY_REVENG_URIS_USED, jsonUris);
 
 				// send a parseable representation of the query:
 				JSONArray jsonTriples = new JSONArray();
@@ -345,11 +349,11 @@ public class LearnerController implements Observer {
 		log.info("sendRevengError()");
 
 		JSONObject resultObject = new JSONObject();
-		resultObject.put(API_ALL_STATUS_KEY, API_ALL_STATUS_VALUE_ERROR);
-		resultObject.put(API_ALL_MESSAGE_KEY, response.getMessage());
-		resultObject.put(API_ALL_COMMAND_KEY, API_ALL_COMMAND_VALUE_REVENG);
-		resultObject.put(API_ALL_CALLBACKID_KEY, callbackId);
-		resultObject.put(API_KEY_LEARNED_QUERY, "");
+		resultObject.put(API_KEY_STATUS, API_VAL_STATUS_ERROR);
+		resultObject.put(API_KEY_MESSAGE, response.getMessage());
+		resultObject.put(API_KEY_COMMAND, API_VAL_COMMAND_REVENG);
+		resultObject.put(API_KEY_CALLBACK_ID, callbackId);
+		resultObject.put(API_KEY_REVENG_LEARNED_QUERY, "");
 
 		log.info("sendRevengError: " + resultObject);
 
@@ -388,13 +392,13 @@ public class LearnerController implements Observer {
 	private static String makeErrorResponseMessage(String command, int callbackId,
 			ApiErrorType apiErrorType) {
 		JSONObject jsonResponse = new JSONObject();
-		jsonResponse.put(API_ALL_CALLBACKID_KEY, callbackId);
-		jsonResponse.put(API_ALL_COMMAND_KEY, command);
-		jsonResponse.put(API_ALL_STATUS_KEY, API_ALL_STATUS_VALUE_ERROR);
+		jsonResponse.put(API_KEY_CALLBACK_ID, callbackId);
+		jsonResponse.put(API_KEY_COMMAND, command);
+		jsonResponse.put(API_KEY_STATUS, API_VAL_STATUS_ERROR);
 
 		switch (apiErrorType) {
 		case NO_SPARQL_ENDPOINT:
-			jsonResponse.put(API_ALL_MESSAGE_KEY, API_ALL_ERROR_MESSAGE_VAL);
+			jsonResponse.put(API_KEY_MESSAGE, API_VAL_MESSAGE_ERROR);
 			break;
 		default:
 			log.error("Unknown ApiErrorType!");

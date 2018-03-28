@@ -52,22 +52,23 @@ public class LearnerWebSocketHandler extends Observable {
 	public static class Update {
 		private ChangeType type;
 		private Session    user;
-		private Integer    statusCode;
 		private String     reason;
 		private String     message;
+		private Integer    statusCode;
 
-		public Update(Session user) {
+		Update(Session user) {
 			this.type = ChangeType.CONNECT;
 			this.user = Objects.requireNonNull(user);
 		}
 
-		public Update(Session user, int statusCode, String reason) {
-			this.type   = ChangeType.CLOSE;
-			this.user   = Objects.requireNonNull(user);
-			this.reason = Objects.requireNonNull(reason);
+		Update(Session user, int statusCode, String reason) {
+			this.type       = ChangeType.CLOSE;
+			this.user       = Objects.requireNonNull(user);
+			this.reason     = Objects.requireNonNull(reason);
+			this.statusCode = statusCode;
 		}
 
-		public Update(Session user, String message) {
+		Update(Session user, String message) {
 			this.type    = ChangeType.MESSAGE;
 			this.user    = Objects.requireNonNull(user);
 			this.message = Objects.requireNonNull(message);
@@ -87,13 +88,7 @@ public class LearnerWebSocketHandler extends Observable {
 
 		@Override
 		public String toString() {
-			return new StringBuilder()
-					.append("Update(")
-					.append(type).append(", ")
-					.append(statusCode).append(", ")
-					.append(reason).append(", ")
-					.append(message).append(")")
-					.toString();
+			return "Update(" + type + ", " + statusCode + ", " + reason + ", " + message + ")";
 		}
 	}
 
