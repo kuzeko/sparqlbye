@@ -12,10 +12,12 @@ import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.sparql.core.Var;
 
+import org.apache.log4j.Logger;
 import uk.ac.ox.cs.sparqlbye.core.UtilsLearner.UTripleProducer;
 
 
 public final class PNAndTreeLearner extends LearnerBase {
+	private static final Logger log = Logger.getLogger(PNAndTreeLearner.class);
 
 	PNAndTreeLearner(
 			Set<QuerySolution> positiveSolutions,
@@ -27,7 +29,8 @@ public final class PNAndTreeLearner extends LearnerBase {
 
 	@Override
 	public Optional<AOTree> learn() {
-		System.out.println("pSols = " + positiveSolutions);
+	    log.info("PNAndTreeLearner.learn()");
+		log.info("PNAndTreeLearner.learn(): pSols = " + positiveSolutions);
 
 		learnedTree = UtilsLearner.buildTemplateTree(positiveSolutions);
 		_learnNode(learnedTree);
@@ -36,6 +39,8 @@ public final class PNAndTreeLearner extends LearnerBase {
 		ULearnedQueryChecker checker =
 				new ULearnedQueryChecker(learnedTree, positiveSolutions, negativeSolutions, queryToQueryExecution);
 		boolean checkPasses = checker.checkLearnedQuery();
+
+        log.info("PNAndTreeLearner.learn(): checkPasses = " + checkPasses);
 
 		return checkPasses ? Optional.of(learnedTree) : Optional.empty();
 	}

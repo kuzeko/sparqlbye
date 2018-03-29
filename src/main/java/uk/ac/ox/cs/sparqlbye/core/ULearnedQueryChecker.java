@@ -10,8 +10,10 @@ import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.sparql.algebra.Op;
 import org.apache.jena.sparql.algebra.OpAsQuery;
+import org.apache.log4j.Logger;
 
-public class ULearnedQueryChecker {
+class ULearnedQueryChecker {
+    private static final Logger log = Logger.getLogger(ULearnedQueryChecker.class);
 
 	private AOTree                          learnedTree;
 	private Set<QuerySolution>              pSols;
@@ -26,23 +28,23 @@ public class ULearnedQueryChecker {
 			Collection<QuerySolution> positiveSolutions,
 			Collection<QuerySolution> negativeSolutions,
 			Function<Query, QueryExecution> getQueryExecution) {
-		this.learnedTree = learnedTree;
-		this.pSols = new HashSet<>(positiveSolutions);
-		this.nSols = new HashSet<>(negativeSolutions);
+		this.learnedTree       = learnedTree;
+		this.pSols             = new HashSet<>(positiveSolutions);
+		this.nSols             = new HashSet<>(negativeSolutions);
 		this.getQueryExecution = getQueryExecution;
-
-		pSolsBad = new HashSet<>();
-		nSolsBad = new HashSet<>();
-		isWellFormed = UtilsAOTrees.isWellFormed(learnedTree);
+		this.pSolsBad          = new HashSet<>();
+		this.nSolsBad          = new HashSet<>();
+		this.isWellFormed      = UtilsAOTrees.isWellFormed(learnedTree);
 	}
 
-	public boolean checkLearnedQuery() {
-		System.out.println("checkLearnedQuery()");
+	boolean checkLearnedQuery() {
+		log.info("ULearnedQueryChecker.checkLearnedQuery()");
 
 		pSolsBad.clear();
 		nSolsBad.clear();
 
 		if(!isWellFormed) {
+            log.info("ULearnedQueryChecker.checkLearnedQuery(): not well formed");
 			return false;
 		}
 
@@ -53,10 +55,11 @@ public class ULearnedQueryChecker {
 		for(QuerySolution solution : pSols) {
 			Query membershipQuery = UtilsJena.toMembershipQuery(learnedQuery, solution);
 
-			System.out.println("checkLearnedQuery: membershipQuery = \n" + membershipQuery);
+			log.info("ULearnedQueryChecker.checkLearnedQuery(): membershipQuery = \n" + membershipQuery);
 
 			try(QueryExecution queryExecution = getQueryExecution.apply(membershipQuery)) {
 				if(!queryExecution.execAsk()) {
+				    log.info("ULearnedQueryChecker.checkLearnedQuery(): failed!");
 					pSolsBad.add(solution);
 				}
 			}
@@ -73,7 +76,7 @@ public class ULearnedQueryChecker {
 			}
 		}
 
-		return (pSolsBad.size() > 0 || nSolsBad.size() > 0);
+        return pSolsBad.isEmpty() && nSolsBad.isEmpty();
 	}
 
 }
