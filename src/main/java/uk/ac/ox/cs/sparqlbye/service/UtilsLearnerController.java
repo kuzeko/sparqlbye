@@ -1,5 +1,6 @@
 package uk.ac.ox.cs.sparqlbye.service;
 
+import org.apache.jena.graph.Triple;
 import org.apache.log4j.Logger;
 
 /**
@@ -10,11 +11,18 @@ import org.apache.log4j.Logger;
 abstract class UtilsLearnerController {
 	private static final Logger log = Logger.getLogger(UtilsLearnerController.class);
 
-	public static final String KEYWORD_SEARCH_QUERY_VAR_URI = "uri";
-	public static final String KEYWORD_SEARCH_QUERY_VAR_LABEL = "label";
-	public static final String KEYWORD_SEARCH_QUERY_VAR_TYPE = "type";
+	static final String KEYWORD_SEARCH_QUERY_VAR_URI = "uri";
+	static final String KEYWORD_SEARCH_QUERY_VAR_LABEL = "label";
+	static final String KEYWORD_SEARCH_QUERY_VAR_TYPE = "type";
+	static final String URI_RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+    static final String URI_RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label";
+    static final String URI_RDFS_SUBCLASSOF = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
 
-	public static String makeKeywordSearchQuery(String keywordsString, String graphUri) {
+    private static String wrapUri(String str) {
+        return "<" + str + ">";
+    }
+
+	static String makeKeywordSearchQuery(String keywordsString, String graphUri) {
 		log.info("makeKeyworkSearchQuery(): Simple implementation for keyword search!");
 
 		//		String[] keywords = keywordsString.split(" ");
@@ -30,22 +38,27 @@ abstract class UtilsLearnerController {
 		String uri = q(KEYWORD_SEARCH_QUERY_VAR_URI);
 		String label = q(KEYWORD_SEARCH_QUERY_VAR_LABEL);
 		String type = q(KEYWORD_SEARCH_QUERY_VAR_TYPE);
-		String RDF_TYPE = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
-		String RDFS_LABEL = "<http://www.w3.org/2000/01/rdf-schema#label>";
 
 		return
 			"select " + uri + " " + label + " " + type + " "
-			+ "from <" + graphUri + "> where { "
-			+ uri + " " + RDFS_LABEL + " " + label + " . "
+			+ "from " + wrapUri(graphUri) + " where { "
+			+ uri + " " + wrapUri(URI_RDFS_LABEL) + " " + label + " . "
 			+ label + " <bif:contains> " + "'" + keywordsString + "' . "
 			+ "{ "
 			+ "select " + uri + " " + "(MIN(STR(?auxType)) as " + type + ") "
-			+ "where { " + uri + " " + RDF_TYPE + " ?auxType } "
+			+ "where { " + uri + " " + wrapUri(URI_RDF_TYPE) + " ?auxType } "
 			+ "group by " + uri + " "
 			+ "} "
 			+ "} "
 			+ "limit 10";
 	}
+
+    static String makeSuperclassQuery(String cl, String varName, String graphUri) {
+        log.info("makeSuperclassQuery(): Make a query that finds superclasses of a given class.");
+
+        return String.format("select %s from <%s> where { <%s> <%s> %s }",
+                q(varName), graphUri, cl, URI_RDFS_SUBCLASSOF, q(varName));
+    }
 
 	private static String q(String varName) {
 		return "?" + varName;

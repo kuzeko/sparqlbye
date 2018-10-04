@@ -1,12 +1,6 @@
 package uk.ac.ox.cs.sparqlbye.core;
 
-import java.util.BitSet;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public abstract class UtilsSets {
 
@@ -17,23 +11,32 @@ public abstract class UtilsSets {
 	 * @param b second set.
 	 * @return the union of <code>a</code> and <code>b</code>.
 	 */
-	public static <T> Set<T> union(Set<T> a, Set<T> b) {
+	static <T> Set<T> union(Set<T> a, Set<T> b) {
 		Set<T> ans = new HashSet<>(a);
 		ans.addAll(b);
 		return ans;
 	}
 
-	public static <T> Set<T> intersection(Set<T> a, Set<T> b) {
+	static <T> Set<T> intersection(Set<T> a, Set<T> b) {
 		Set<T> ans = new HashSet<>(a);
 		ans.retainAll(b);
 		return ans;
 	}
 
-	public static <T> Set<T> diff(Collection<T> a, Collection<T> b) {
+	static <T> Set<T> diff(Collection<T> a, Collection<T> b) {
 		Set<T> ans = new HashSet<>(a);
 		ans.removeAll(b);
 		return ans;
 	}
+
+	public static <T> T getRandomElement(Collection<T> a) {
+	    if(a.isEmpty()) {
+	        return null;
+        } else {
+		    return a.stream().skip(new Random().nextInt(a.size())).findFirst().orElse(null);
+        }
+	}
+
 
 //	public static <T> boolean isSubset(Set<T> a, Set<T> b) {
 //		return b.containsAll(a);

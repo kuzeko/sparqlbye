@@ -1,12 +1,16 @@
 package uk.ac.ox.cs.sparqlbye.core;
 
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.graph.Triple;
 import org.apache.jena.sparql.core.Var;
 
+import java.util.Collections;
 import java.util.Set;
 
 public abstract class UtilsAOTrees {
 
-	public static boolean isWellFormed(AOTree tree) {
+	static boolean isWellFormed(AOTree tree) {
 		return isWellFormedHere(tree) && tree.getChildren().stream().allMatch(UtilsAOTrees::isWellFormed);
 	}
 
@@ -59,23 +63,67 @@ public abstract class UtilsAOTrees {
 //	public static Set<Node> constants(AOTree tree) {
 //		return UtilsJena.constantsInTriples(tree.getTriplesInSubtree());
 //	}
-//
-//	private static AOTree copy(AOTree tree) {
-//		AOTree copy = AOTree.from(Collections.emptyList());
-//
-//		for(Triple triple : tree.getMandTriples()) {
-//			copy.addTriple(triple);
-//		}
-//
-//		for(Var var : tree.getDesiredTopVars()) {
-//			copy.addDesiredTopVar(var);
-//		}
-//
-//		for(AOTree child : tree.getChildren()) {
-//			tree.addChild(copy(child));
-//		}
-//
-//		return copy;
-//	}
+
+	public static AOTree copy(AOTree tree) {
+		AOTree copy = AOTree.from(Collections.emptyList());
+
+		for(Triple triple : tree.getMandTriples()) {
+			copy.addTriple(triple);
+		}
+
+		for(Var var : tree.getDesiredTopVars()) {
+			copy.addDesiredTopVar(var);
+		}
+
+		for(AOTree child : tree.getChildren()) {
+			copy.addChild(copy(child));
+		}
+
+		return copy;
+	}
+
+    public static AOTree copyAndReplace(AOTree tree, String oldUri, String newUri) {
+        AOTree copy = AOTree.from(Collections.emptyList());
+
+        for(Triple triple : tree.getMandTriples()) {
+            copy.addTriple(copyAndReplaceTriple(triple, oldUri, newUri));
+        }
+
+        for(Var var : tree.getDesiredTopVars()) {
+            copy.addDesiredTopVar(var);
+        }
+
+        for(AOTree child : tree.getChildren()) {
+            tree.addChild(copyAndReplace(child, oldUri, newUri));
+        }
+
+        return copy;
+    }
+
+    private static Triple copyAndReplaceTriple(Triple triple, String oldUri, String newUri) {
+
+        Node nodeS;
+	    if(triple.getSubject().isURI() && triple.getSubject().getURI().equals(oldUri)) {
+            nodeS = NodeFactory.createURI(newUri);
+        } else {
+	        nodeS = triple.getSubject();
+        }
+
+	    Node nodeP;
+        if(triple.getPredicate().isURI() && triple.getPredicate().getURI().equals(oldUri)) {
+            nodeP = NodeFactory.createURI(newUri);
+        } else {
+            nodeP = triple.getPredicate();
+        }
+
+        Node nodeO;
+        if(triple.getObject().isURI() && triple.getObject().getURI().equals(oldUri)) {
+            nodeO = NodeFactory.createURI(newUri);
+        } else {
+            nodeO = triple.getObject();
+        }
+
+        return Triple.create(nodeS, nodeP, nodeO);
+    }
 
 }

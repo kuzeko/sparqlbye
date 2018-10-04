@@ -6,12 +6,12 @@ angular.module('resparql', [])
   var currentCallbackId = 0;
   var ws = new WebSocket("ws://" + location.hostname + ":" + location.port + "/learning/");
 
-  ws.onopen = function(){
+  ws.onopen = function() {
     console.log("ws.onopen");
   };
 
   ws.onmessage = function(message) {
-    console.warn('ws.onmessage: ', message);
+    console.log('ws.onmessage: ', message);
     listener(JSON.parse(message.data));
   };
 
@@ -26,7 +26,7 @@ angular.module('resparql', [])
     request.callback_id = callbackId;
     console.log('ResparqlService.sendRequest: Sending request', request);
     ws.send(JSON.stringify(request));
-    console.log('ResparqlService.sendRequest: request sent', defer.promise);
+    console.log('ResparqlService.sendRequest: Sent request', defer.promise);
     return defer.promise;
   }
 
@@ -36,9 +36,9 @@ angular.module('resparql', [])
     console.log("ResparqlService.listener: Received data from websocket: ", messageObj);
     console.log('ResparqlService.listener: callbacks = ', callbacks);
 
-    var log = document.getElementById('log');
-    var content = document.createTextNode( JSON.stringify(messageObj, null, 2) + '\n' );
-    log.appendChild(content);
+//    var log = document.getElementById('log');
+//    var content = document.createTextNode( JSON.stringify(messageObj, null, 2) + '\n' );
+//    log.appendChild(content);
 
     // If an object exists with callback_id in our callbacks object, resolve it
     if(callbacks.hasOwnProperty(messageObj.callback_id)) {
@@ -48,7 +48,7 @@ angular.module('resparql', [])
 
       delete callbacks[messageObj.callbackID];
     } else {
-      console.log('wierd');
+      console.error('unexpected');
     }
 
     console.log('ResparqlService.listener: command = ' + messageObj.command);
@@ -57,6 +57,19 @@ angular.module('resparql', [])
   function getCallbackId() {
     currentCallbackId = (currentCallbackId + 1) % 10000;
     return currentCallbackId;
+  }
+
+  // Main service call for reverse engineering
+  Service.executeRevEng = function(message) {
+    console.log('ResparqlService.executeRevEng()');
+    var promise = sendRequest(message);
+    return promise;
+  }
+
+  Service.executeGetNegs = function(message) {
+    console.log('ResparqlService.executeGetNegs()');
+    var promise = sendRequest(message);
+    return promise;
   }
 
   Service.searchEntity = function(message) {
@@ -71,42 +84,34 @@ angular.module('resparql', [])
     return promise;
   }
 
-  Service.executeRevEng = function(message) {
-    console.log('ResparqlService.executeRevEng()');
-    var promise = sendRequest(message);
-    return promise;
-  }
-
   return Service;
 }])
 .controller('QueryTextController', function($scope, ResparqlService) {
-  var queryText = this;
+  var sController = this;
 
-  // queryText.curQueryText = "select *\nwhere {\n  <http://dbpedia.org/resource/Chile> ?p ?o\n}\nlimit 10";
-  // queryText.sugQueryText = "select * where { ?s ?p ?o }";
-  queryText.pnExamplesText = "{}";
-  // queryText.pnExamplesQuickText = "+Chile +Bolivia +Venezuela -Angola +Spain";
-  // queryText.pnExamplesQuickText = "+{Chile,Bolivia} +{Chile,Peru} +{Chile,Argentina} -{Chile,Brazil}";
-  // queryText.pnExamplesQuickText = "+{<http://dbpedia.org/resource/C._S._Lewis>,<http://dbpedia.org/resource/Oxford>} +{<http://dbpedia.org/resource/J._R._R._Tolkien>,<http://dbpedia.org/resource/Dorset>} +{<http://dbpedia.org/resource/J._K._Rowling>,}";
-  queryText.pnExamplesQuickText = '';
-  queryText.learnedQuery = '';
-  // queryText.learnedQueryResults = '';
-  queryText.entityPairs = [];
-  queryText.revengQueryBindings = [];
-  queryText.revengExtraBindings = [];
-  queryText.defaultUriPrefix = 'http://dbpedia.org/resource/';
-  queryText.badUris = [];
-  queryText.badUrisText = '';
+  sController.pnExamplesText = "{}";
+  sController.pnExamplesQuickText = '';
+  sController.learnedQuery = '';
+  sController.entityPairs = [];
+  sController.revengQueryBindings = [];
+  sController.revengExtraBindings = [];
+  sController.defaultUriPrefix = 'http://dbpedia.org/resource/';
+  sController.badUris = [];
+  sController.badUrisText = '';
 
-  queryText.searchEntity = function() {
-    console.debug('queryText.searchEntity()');
-    message = { command: 'search', queryText: queryText.keywordInputText };
+  function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  sController.searchEntity = function() {
+    console.debug('sController.searchEntity()');
+    message = { command: 'search', queryText: sController.keywordInputText };
     var promise = ResparqlService.searchEntity(message);
     console.debug('message supposedly sent');
     console.debug(promise);
 
     promise.then(function(val){
-      console.debug('queryText.searchEntity::callback() val = ', val);
+      console.debug('sController.searchEntity::callback() val = ', val);
 
       var pairs = val.pairs;
 
@@ -114,33 +119,29 @@ angular.module('resparql', [])
         console.log("Key is " + pair + ", value is ", pairs[pair]);
       }
 
-      queryText.entityPairs = val.pairs;
-
+      sController.entityPairs = val.pairs;
     });
   };
 
-  queryText.executeQuery = function() {
-    console.debug('queryText.executeQuery()');
-    message = { command: 'execute', queryText: queryText.learnedQuery };
+  sController.executeQuery = function() {
+    console.log('sController.executeQuery()');
+    message = { command: 'execute', queryText: sController.learnedQuery };
     // console.debug('sending message: ' + JSON.stringify(message))
     // var promise = ResparqlService.executeQuery(message);
 
     // var message = { queryText: queryText.learnedQuery + '\nlimit 10', command: 'execute' }
     var promise = ResparqlService.executeQuery(message);
-    console.debug('queryText.executeQuery: sent execute message', message);
+    console.debug('sController.executeQuery: sent execute message', message);
     promise.then(function(val) {
-      console.debug('queryText.executeQuery.promise.then()');
-      queryText.revengQueryBindings = val['virtuoso_response']['results']['bindings']
+      console.debug('sController.executeQuery.promise.then()');
+      sController.revengQueryBindings = val['virtuoso_response']['results']['bindings']
     });
   };
 
-
-
-  queryText.executeRevEngQuick = function() {
+  sController.executeRevEngQuick = function() {
     console.debug('executeRevEngQuick()');
 
-    queryText.learnedQuery = '';
-    // queryText.learnedQueryResults = '';
+    sController.learnedQuery = '';
 
     var regex               = /^(\+|-)?(\w+)$/i;
     var regexUnaryMap       = /^(\+|-)?(\w+|<\S+>|\[\S+\])$/;
@@ -152,13 +153,14 @@ angular.module('resparql', [])
     var badUris             = [];
 
     // parse bad uris:
-    // var badUrisMatches = regexBadUris.exec(queryText.badUrisText);
-    var badUrisRaw = queryText.badUrisText.split(/\s+/);
-    console.warn('badUrisRaw = ', badUrisRaw);
+    // var badUrisMatches = regexBadUris.exec(sController.badUrisText);
+    var badUrisRaw = sController.badUrisText.split(/\s+/);
+    console.debug('badUrisRaw = ', badUrisRaw);
 
     for (var i = 0; i < badUrisRaw.length; i++) {
       // if(!(badUris[i] === undefined)) {
         // badUris.push(badUrisMatches[i].replace(/^\s+|\s+$/gm,'').slice(1,-1));
+        // replace
         badUris.push(badUrisRaw[i].slice(1,-1));
       // }
     }
@@ -166,7 +168,7 @@ angular.module('resparql', [])
     console.debug('badUris = ', badUris);
 
     // split the examples:
-    var examplesArray = queryText.pnExamplesQuickText.split(/\s+/);
+    var examplesArray = sController.pnExamplesQuickText.split(/\s+/);
 
     // use first example to determine arity:
     var arity = -1;
@@ -210,11 +212,11 @@ angular.module('resparql', [])
       var textToUri = function(str) {
         if(str === undefined) { return undefined; }
         if(str.slice(0, 1) === '[' && str.slice(-1) === ']') {
-          return queryText.defaultUriPrefix + str.slice(1,-1);
+          return sController.defaultUriPrefix + str.slice(1,-1);
         } else if(str.slice(0, 1) === '<' && str.slice(-1) === '>') {
           return str.slice(1,-1);
         } else {
-          return queryText.defaultUriPrefix + str;
+          return sController.defaultUriPrefix + str;
         }
       };
 
@@ -239,76 +241,94 @@ angular.module('resparql', [])
     console.debug('executeRevEngQuick: badUris     = ', badUris);
 
     message = {
-      'command': 'reveng',
-      'pBindings': {
-        head: { link: [], vars: varsList },
-        results: { distinct: false, ordered: false, bindings: positiveBindings }
+      command: 'reveng',
+      pBindings: {
+        head: { vars: varsList },
+        results: { bindings: positiveBindings }
       },
-      'nBindings': {
-        head: { link: [], vars: varsList },
-        results: { distinct: false, ordered: false, bindings: negativeBindings }
+      nBindings: {
+        head: { vars: varsList },
+        results: { bindings: negativeBindings }
       },
-      'badUris': badUris
+      badUris: badUris
     };
 
     console.debug('sending message: ' + JSON.stringify(message));
-    var promise = ResparqlService.executeRevEng(message);
+    sController.learnedQuery = 'Calculating...'
 
-    promise.then(function(val){
+    ResparqlService
+    .executeRevEng(message)
+    .then(function(val) {
       console.log('executeRevEngQuick.then()', val);
-      queryText.learnedQuery = val.learnedQuery;
-      queryText.urisUsed = val.urisUsed;
+      sController.learnedQuery = val.learnedQuery;
+      sController.urisUsed = val.urisUsed;
 
-      if(queryText.learnedQuery === '') {
-        queryText.learnedQuery = 'NOTHING LEARNED';
+      if(sController.learnedQuery === '') {
+        sController.learnedQuery = 'NOTHING LEARNED';
       } else {
-        // EXECUTE THE LEARNED QUERY TO SHOW SOME ANSWERS:
+        // Get some potential negative examples.
 
-        var message = { queryText: queryText.learnedQuery + '\nlimit 10', command: 'execute', limit: 10 }
-        var promise2 = ResparqlService.executeQuery(message);
-        console.log('executeRevEngQuick.then: sent execute message', message);
-        promise2.then(function(val) {
-          console.debug('promise2');
-          // queryText.learnedQueryResults = "" + JSON.stringify(val['virtuoso_response']['results'], null, 2);
-          queryText.revengQueryBindings = val['virtuoso_response']['results']['bindings'];
-          queryText.binMappings = val['virtuoso_response']['head']['vars'].length == 2;
+        var message = {
+          command: 'getnegs',
+          queryText: sController.learnedQuery
+        };
 
-          console.warn('queryText.binMappings = ', queryText.binMappings);
+        console.log('executeRevEngQuick.then: sent getnegs message', message);
 
-          console.warn('setting queryText.revengQueryBindings = ', val['virtuoso_response']['results']['bindings']);
+        sController.revengQueryBindings = [];
+
+        ResparqlService
+        .executeGetNegs(message)
+        .then(function(val) {
+          console.log('executeRevEngQuick.then.then');
+          // sController.learnedQueryResults = "" + JSON.stringify(val['virtuoso_response']['results'], null, 2);
+          sController.revengQueryBindings = val['virtuoso_response']['results']['bindings'].slice(0, 10);
+          sController.binMappings = val['virtuoso_response']['head']['vars'].length == 3;
+
+          console.log('sController.binMappings = ', sController.binMappings);
+          console.log('setting sController.revengQueryBindings = ', val['virtuoso_response']['results']['bindings']);
         });
 
-        // PREPARE A RELAXED VERSION OF THE LEARNED QUERY:
-        function getRandomInt(min, max) {
-          return Math.floor(Math.random() * (max - min + 1)) + min;
+        // [OLD IMPLEMENTATION] PREPARE A RELAXED VERSION OF THE LEARNED QUERY:
+//        console.log('Triples in working query: ', val.triples.length);
+//        var eliminateTuple = getRandomInt(0, val.triples.length - 1) // Math.random() * val.triples.length
+//        console.error('will remove: ', eliminateTuple);
+//        var relaxed = 'select * from <http://dbpedia.org/> where { ';
+//        for(var k in val.triples) {
+//          console.debug('k: ', k);
+//
+//          if(k != eliminateTuple) {
+//            var s = val.triples[k].s;
+//            var p = val.triples[k].p;
+//            var o = val.triples[k].o;
+//            if(s.slice(0, 1) != '?') { s = '<' + s + '>'; }
+//            if(p.slice(0, 1) != '?') { p = '<' + p + '>'; }
+//            if(o.slice(0, 1) != '?') { o = '<' + o + '>'; }
+//            relaxed += s + ' ' + p + ' ' + o + ' . ';
+//          }
+//        }
+//        relaxed += '?x <http://www.w3.org/2000/01/rdf-schema#label> ?label . { select ?x (MIN(STR(?type)) as ?minType) where { ?x <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?type } group by ?x } } limit 10';
+
+//        console.log('relaxed query built: ', relaxed);
+
+        var relaxedQueryString = val.relaxedQuery;
+
+        relaxedHacked = relaxedQueryString.substring(0, relaxedQueryString.length - 3);
+        relaxedHacked += ' { select ?x (MIN(STR(?type)) as ?minType) where { ?x <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?type } group by ?x } }';
+
+        console.warn(relaxedHacked);
+
+        var message3 = {
+          command: 'execute',
+//          queryText: relaxedQueryString
+          queryText: relaxedHacked
         }
 
-        console.error('ASDF ASDF ', val.triples.length);
-        var eliminateTuple = getRandomInt(0, val.triples.length - 1) // Math.random() * val.triples.length
-        console.error('will remove: ', eliminateTuple);
-        var relaxed = 'select * from <http://dbpedia.org/> where { ';
-        for(var k in val.triples) {
-          console.error('k: ', k);
-          if(k != eliminateTuple) {
-            var s = val.triples[k].s;
-            var p = val.triples[k].p;
-            var o = val.triples[k].o;
-            if(s.slice(0, 1) != '?') { s = '<' + s + '>'; }
-            if(p.slice(0, 1) != '?') { p = '<' + p + '>'; }
-            if(o.slice(0, 1) != '?') { o = '<' + o + '>'; }
-            relaxed += s + ' ' + p + ' ' + o + ' . ';
-          }
-        }
-        relaxed += '?x <http://www.w3.org/2000/01/rdf-schema#label> ?label . { select ?x (MIN(STR(?type)) as ?minType) where { ?x <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?type } group by ?x } } limit 10';
-
-        console.error('relaxed: ', relaxed);
-
-        var message3 = { command: 'execute', queryText: relaxed }
-        var promise3 = ResparqlService.executeQuery(message3);
-        console.log('executeRevEngQuick.then: sent execute message', message3);
-        promise3.then(function(val) {
+        ResparqlService
+        .executeQuery(message3)
+        .then(function(val) {
           console.debug('promise3');
-          queryText.revengExtraBindings = val['virtuoso_response']['results']['bindings']
+          sController.revengExtraBindings = val['virtuoso_response']['results']['bindings'].slice(0, 10)
         });
 
       }
@@ -317,51 +337,51 @@ angular.module('resparql', [])
     // console.debug(promise);
   };
 
-  queryText.addTypeRestr = function(type) {
-    console.error('queryText.addTypeRestr(): ', type);
-    // queryText.learnedQuery.replace(/}/,'');
-    queryText.learnedQuery = queryText.learnedQuery.replace(/\s*}\s*$/,'\n') + '\n. ?s a <' + type + '>\n}';
+  sController.addTypeRestr = function(type) {
+    console.error('sController.addTypeRestr(): ', type);
+    // sController.learnedQuery.replace(/}/,'');
+    sController.learnedQuery = sController.learnedQuery.replace(/\s*}\s*$/,'\n') + '\n. ?s a <' + type + '>\n}';
   }
 
-  queryText.addForbiddenURI = function(str) {
-    queryText.badUrisText += ' <' + str + '>';
+  sController.addForbiddenURI = function(str) {
+    sController.badUrisText += ' <' + str + '>';
   }
 
-  queryText.appendNSol = function(value) {
+  sController.appendNSol = function(value) {
     console.debug('appendNSol', value);
-    if(queryText.binMappings) {
-      queryText.pnExamplesQuickText += ' -{<' + value.x.value + '>,<' + value.y.value + '>}';
+    if(sController.binMappings) {
+      sController.pnExamplesQuickText += ' -{<' + value.x.value + '>,<' + value.y.value + '>}';
     } else {
-      queryText.pnExamplesQuickText += ' -<' + value.x.value + '>';
+      sController.pnExamplesQuickText += ' -<' + value.x.value + '>';
     }
 
     console.debug('bla');
   }
 
-  queryText.appendPSol = function(value) {
+  sController.appendPSol = function(value) {
     console.debug('appendPSol', value);
-    if(queryText.binMappings) {
-      queryText.pnExamplesQuickText += ' +{<' + value.x.value + '>,<' + value.y.value + '>}';
+    if(sController.binMappings) {
+      sController.pnExamplesQuickText += ' +{<' + value.x.value + '>,<' + value.y.value + '>}';
     } else {
-      queryText.pnExamplesQuickText += ' +<' + value.x.value + '>';
+      sController.pnExamplesQuickText += ' +<' + value.x.value + '>';
     }
   }
 
-  queryText.copyUri = function(value) {
+  sController.copyUri = function(value) {
     console.debug('copyUri', value);
     copyTextToClipboard(value);
   }
 
-  queryText.fillExample1 = function(value) {
-    queryText.pnExamplesQuickText = '+Chile +Bolivia +Venezuela +Spain -Brazil -Angola';
+  sController.fillExample1 = function(value) {
+    sController.pnExamplesQuickText = '+Chile +Bolivia +Venezuela +Spain -Brazil -Angola';
   }
 
-  queryText.fillExample2 = function(value) {
-    queryText.pnExamplesQuickText = '+Chile +Bolivia +Venezuela -Spain';
+  sController.fillExample2 = function(value) {
+    sController.pnExamplesQuickText = '+Chile +Bolivia +Venezuela -Spain';
   }
 
-  queryText.fillExample3 = function(value) {
-    queryText.pnExamplesQuickText = '+{<http://dbpedia.org/resource/C._S._Lewis>,<http://dbpedia.org/resource/Oxford>}\n\n+{<http://dbpedia.org/resource/J._R._R._Tolkien>,<http://dbpedia.org/resource/Dorset>}\n\n+{<http://dbpedia.org/resource/J._K._Rowling>,}';
+  sController.fillExample3 = function(value) {
+    sController.pnExamplesQuickText = '+{<http://dbpedia.org/resource/C._S._Lewis>,<http://dbpedia.org/resource/Oxford>}\n\n+{<http://dbpedia.org/resource/J._R._R._Tolkien>,<http://dbpedia.org/resource/Dorset>}\n\n+{<http://dbpedia.org/resource/J._K._Rowling>,}';
   }
 
 });
