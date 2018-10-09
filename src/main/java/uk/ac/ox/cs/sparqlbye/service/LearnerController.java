@@ -268,7 +268,7 @@ public class LearnerController implements Observer {
 
                 resultObject.put("triples", jsonTriples);
 
-                resultObject.put("relaxedQuery", relaxedQuery == null ? "" : relaxedQuery.toString());
+                resultObject.put("relaxedQuery", relaxedQuery == null ? learnedQuery : relaxedQuery.toString());
 
                 log.info("sending: " + resultObject.toString());
 
