@@ -64,25 +64,25 @@ angular.module('resparql', [])
     console.log('ResparqlService.executeRevEng()');
     var promise = sendRequest(message);
     return promise;
-  }
+  };
 
   Service.executeGetNegs = function(message) {
     console.log('ResparqlService.executeGetNegs()');
     var promise = sendRequest(message);
     return promise;
-  }
+  };
 
   Service.searchEntity = function(message) {
     console.log('ResparqlService.searchEntity()');
     var promise = sendRequest(message);
     return promise;
-  }
+  };
 
   Service.executeQuery = function(message) {
     console.log('ResparqlService.executeQuery()');
     var promise = sendRequest(message);
     return promise;
-  }
+  };
 
   return Service;
 }])
@@ -144,8 +144,8 @@ angular.module('resparql', [])
     sController.learnedQuery = '';
 
     var regex               = /^(\+|-)?(\w+)$/i;
-    var regexUnaryMap       = /^(\+|-)?(\w+|<\S+>|\[\S+\])$/;
-    var regexBinaryMappings = /^(\+|-)?{(\w+|<\S+>|\[\S+\]),(\w+|<\S+>|\[\S+\])?}$/;
+    var regexUnaryMap       = /^(\+|-)?("\S+"|\w+|<\S+>|\[\S+\])$/;
+    var regexBinaryMappings = /^(\+|-)?{("\S+"|\w+|<\S+>|\[\S+\]),("\S+"|\w+|<\S+>|\[\S+\])?}$/;
     var regexBadUris        = /^(<\S+>)(\s+<\S+>)*$/;
     var varsList            = [];
     var positiveBindings    = [];
@@ -165,7 +165,7 @@ angular.module('resparql', [])
       // }
     }
 
-    console.debug('badUris = ', badUris);
+    //console.debug('badUris = ', badUris);
 
     // split the examples:
     var examplesArray = sController.pnExamplesQuickText.split(/\s+/);
@@ -177,7 +177,9 @@ angular.module('resparql', [])
       arity = 1;
     } else {
       matches = regexBinaryMappings.exec(examplesArray[0]);
-      if(matches) { arity = 2; }
+      if(matches) { 
+          arity = 2; 
+      }
     }
 
     console.debug('arity = ', arity);
@@ -215,20 +217,23 @@ angular.module('resparql', [])
           return sController.defaultUriPrefix + str.slice(1,-1);
         } else if(str.slice(0, 1) === '<' && str.slice(-1) === '>') {
           return str.slice(1,-1);
+        } else if(str.slice(0, 1) === '"' && str.slice(-1) === '"') {
+          // This is a value, we keep it as is!
+          return str;          
         } else {
           return sController.defaultUriPrefix + str;
         }
       };
 
-      if(arity == 1) {
+      if(arity === 1) {
         var uri = textToUri(matches[2]);
         correctBindings.push({ x: { type: 'uri', value: uri } });
-      } else if(arity == 2) {
+      } else if(arity === 2) {
         var uri1 = textToUri(matches[2]);
         var uri2 = textToUri(matches[3]);
         var binding = { };
         binding["x"] = { type: 'uri', value: uri1 };
-        if(!(uri2 == undefined)) {
+        if(!(uri2 === undefined)) {
           binding["y"] = { type: 'uri', value: uri2 };
         }
         console.warn('binding = ', binding);
@@ -254,7 +259,7 @@ angular.module('resparql', [])
     };
 
     console.debug('sending message: ' + JSON.stringify(message));
-    sController.learnedQuery = 'Calculating...'
+    sController.learnedQuery = 'Calculating...';
 
     ResparqlService
     .executeRevEng(message)
@@ -283,7 +288,7 @@ angular.module('resparql', [])
           console.log('executeRevEngQuick.then.then');
           // sController.learnedQueryResults = "" + JSON.stringify(val['virtuoso_response']['results'], null, 2);
           sController.revengQueryBindings = val['virtuoso_response']['results']['bindings'].slice(0, 10);
-          sController.binMappings = val['virtuoso_response']['head']['vars'].length == 3;
+          sController.binMappings = val['virtuoso_response']['head']['vars'].length === 3;
 
           console.log('sController.binMappings = ', sController.binMappings);
           console.log('setting sController.revengQueryBindings = ', val['virtuoso_response']['results']['bindings']);
@@ -322,13 +327,13 @@ angular.module('resparql', [])
           command: 'execute',
 //          queryText: relaxedQueryString
           queryText: relaxedHacked
-        }
+        };
 
         ResparqlService
         .executeQuery(message3)
         .then(function(val) {
           console.debug('promise3');
-          sController.revengExtraBindings = val['virtuoso_response']['results']['bindings'].slice(0, 10)
+          sController.revengExtraBindings = val['virtuoso_response']['results']['bindings'].slice(0, 10);
         });
 
       }
@@ -341,11 +346,11 @@ angular.module('resparql', [])
     console.error('sController.addTypeRestr(): ', type);
     // sController.learnedQuery.replace(/}/,'');
     sController.learnedQuery = sController.learnedQuery.replace(/\s*}\s*$/,'\n') + '\n. ?s a <' + type + '>\n}';
-  }
+  };
 
   sController.addForbiddenURI = function(str) {
     sController.badUrisText += ' <' + str + '>';
-  }
+  };
 
   sController.appendNSol = function(value) {
     console.debug('appendNSol', value);
@@ -356,7 +361,7 @@ angular.module('resparql', [])
     }
 
     console.debug('bla');
-  }
+  };
 
   sController.appendPSol = function(value) {
     console.debug('appendPSol', value);
@@ -365,24 +370,24 @@ angular.module('resparql', [])
     } else {
       sController.pnExamplesQuickText += ' +<' + value.x.value + '>';
     }
-  }
+  };
 
   sController.copyUri = function(value) {
     console.debug('copyUri', value);
     copyTextToClipboard(value);
-  }
+  };
 
   sController.fillExample1 = function(value) {
     sController.pnExamplesQuickText = '+Chile +Bolivia +Venezuela +Spain -Brazil -Angola';
-  }
+  };
 
   sController.fillExample2 = function(value) {
     sController.pnExamplesQuickText = '+Chile +Bolivia +Venezuela -Spain';
-  }
+  };
 
   sController.fillExample3 = function(value) {
     sController.pnExamplesQuickText = '+{<http://dbpedia.org/resource/C._S._Lewis>,<http://dbpedia.org/resource/Oxford>}\n\n+{<http://dbpedia.org/resource/J._R._R._Tolkien>,<http://dbpedia.org/resource/Dorset>}\n\n+{<http://dbpedia.org/resource/J._K._Rowling>,}';
-  }
+  };
 
 });
 
