@@ -219,22 +219,40 @@ angular.module('resparql', [])
           return str.slice(1,-1);
         } else if(str.slice(0, 1) === '"' && str.slice(-1) === '"') {
           // This is a value, we keep it as is!
-          return str;          
+          return str.slice(1,-1);          
         } else {
           return sController.defaultUriPrefix + str;
         }
       };
+      
+      var varType = function(str) {
+        if(str === undefined) { return undefined; }
+        if(str.slice(0, 1) === '[' && str.slice(-1) === ']') {
+          return "uri";
+        } else if(str.slice(0, 1) === '<' && str.slice(-1) === '>') {
+          return "uri";
+        } else if(str.slice(0, 1) === '"' && str.slice(-1) === '"') {
+          // This is a value, we keep it as is!
+          return "literal";
+        } else {
+          return "uri";
+        }
+      };
 
       if(arity === 1) {
+        var vType = varType(matches[2]);
         var uri = textToUri(matches[2]);
-        correctBindings.push({ x: { type: 'uri', value: uri } });
+        correctBindings.push({ x: { type: vType, value: uri } });
       } else if(arity === 2) {
         var uri1 = textToUri(matches[2]);
+        var vType1 = varType(matches[2]);
+        
         var uri2 = textToUri(matches[3]);
+        var vType2 = varType(matches[3]);
         var binding = { };
-        binding["x"] = { type: 'uri', value: uri1 };
+        binding["x"] = { type: vType1, value: uri1 };
         if(!(uri2 === undefined)) {
-          binding["y"] = { type: 'uri', value: uri2 };
+          binding["y"] = { type: vType2, value: uri2 };
         }
         console.warn('binding = ', binding);
         correctBindings.push(binding);
